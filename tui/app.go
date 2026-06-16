@@ -8,7 +8,6 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/bubbles/textarea"
-	"github.com/charmbracelet/lipgloss"
 
 	"github.com/danterolle/voca/translate"
 )
@@ -51,14 +50,6 @@ type Model struct {
 	translateSeq int
 	leadingDone  bool
 }
-
-var (
-	headerStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("205")).Bold(true)
-	subtleStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
-	inputStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("36"))
-	outputStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("62"))
-	helpStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
-)
 
 func InitialModel() Model {
 	ta := textarea.New()
