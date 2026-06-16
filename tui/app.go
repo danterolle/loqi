@@ -2,13 +2,10 @@ package tui
 
 import (
 	"fmt"
-	"os/exec"
 	"strings"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-
-	"github.com/danterolle/voca/translate"
 )
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -168,19 +165,6 @@ func (m Model) retreatFocus() Model {
 	return m
 }
 
-func (m Model) doTranslate(text, source, target string) tea.Cmd {
-	return func() tea.Msg {
-		result, err := translate.Translate(text, source, target, translate.DefaultModel)
-		return translateResultMsg{text: text, result: result, err: err}
-	}
-}
-
-func copyClipboard(text string) error {
-	cmd := exec.Command("pbcopy")
-	cmd.Stdin = strings.NewReader(text)
-	return cmd.Run()
-}
-
 func (m Model) View() string {
 	if !m.ready {
 		return "\n  Loading..."
@@ -232,11 +216,4 @@ func (m Model) View() string {
 	b.WriteString(helpStyle.Render("ctrl+y:copy  ctrl+l:clear  ctrl+t:swap  ctrl+c:quit  tab:next"))
 
 	return b.String()
-}
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
 }
