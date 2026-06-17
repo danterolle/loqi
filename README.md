@@ -10,48 +10,26 @@ Local-first translation tool for desktop and developer workflows. Translate text
 
 ---
 
-## Table of Contents
-
-- [Installation](#installation)
-- [Quick start](#quick-start)
-- [TUI mode](#tui-mode)
-- [CLI mode](#cli-mode-one-shot)
-- [Benchmarks](#benchmarks)
-
 ## Installation
-
-```bash
-# Install from source
-go install github.com/danterolle/voca@latest
-git clone https://github.com/danterolle/voca
-cd voca
-make build
-```
 
 **Prerequisites:** [Ollama](https://ollama.com) with at least one model pulled (e.g. `ollama pull gemma3:1b`).
 
-**Makefile:**
 ```bash
-make build
-make build-linux        # cross-compile for Linux
-make build-windows      # cross-compile for Windows
-make build-darwin       # cross-compile for macOS
-make run ARGS="--model phi4-mini:latest"
-make stop               # kill ollama
+go install github.com/danterolle/voca@latest
 ```
 
----
+Or build from source:
+
+```bash
+git clone https://github.com/danterolle/voca && cd voca
+make build
+```
 
 ## Quick start
 
 ```bash
-voca
-
-# Run a one-shot translation
-voca translate --from en --to it "Hello world"
-
-# Use a different model
-voca --model phi4-mini:latest
+voca                                           # TUI mode
+voca translate --from it --to en  "Ciao mondo" # one-shot from stdin
 ```
 
 ## TUI mode
@@ -60,8 +38,8 @@ Interactive terminal interface with auto-translate as you type.
 
 **Flags:**
 ```
---model   Ollama model to use (default: gemma4:e2b-it-qat)
--h, --help   Show usage
+--model       Ollama model (default: gemma4:e2b-it-qat)
+-h, --help    Show usage
 ```
 
 **Keyboard:**
@@ -76,7 +54,7 @@ Interactive terminal interface with auto-translate as you type.
 
 ## CLI mode (one-shot)
 
-Translate directly from the command line in one shot combo:
+Translate directly from the command line:
 
 ```bash
 # Translate a string
@@ -97,10 +75,10 @@ voca translate --from it --to en test_data/malavoglia.md
 
 **Flags:**
 ```
---from    Source language code (default: auto)
---to      Target language code (default: en)
---model   Ollama model (default: gemma4:e2b-it-qat)
--h, --help   Show usage with examples
+--from        Source language code (default: auto)
+--to          Target language code (default: en)
+--model       Ollama model (default: gemma4:e2b-it-qat)
+-h, --help    Show usage with examples
 ```
 
 ## Benchmarks
