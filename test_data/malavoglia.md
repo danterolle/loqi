@@ -11,3 +11,5 @@ Padron ’Ntoni sapeva anche certi motti e proverbi che aveva sentito dagli anti
 Ecco perchè la casa del nespolo prosperava, e padron ’Ntoni passava per testa quadra, al punto che a Trezza l’avrebbero fatto consigliere comunale, se don Silvestro, il segretario, il quale la sapeva lunga, non avesse predicato che era un codino marcio, un reazionario di quelli che proteggono i Borboni, e che cospirava pel ritorno di Franceschello, onde poter spadroneggiare nel villaggio, come spadroneggiava in casa propria.
 
 Padron ’Ntoni invece non lo conosceva neanche di vista Franceschello, e badava agli affari suoi, e soleva dire: «Chi ha carico di casa non può dormire quando vuole» perchè «chi comanda ha da dar conto».
+
+> Tratto da [I Malavoglia](https://it.wikisource.org/wiki/I_Malavoglia) di Giovanni Verga — Wikisource.

@@ -98,6 +98,9 @@ voca translate --from auto --to en ./document.md
 
 # Choose a model
 voca translate --model phi4-mini:latest --from fr --to en "Bonjour le monde"
+
+# Test with literary text (see test_data/)
+voca translate --from it --to en test_data/malavoglia.md
 ```
 
 **Flags:**
