@@ -131,7 +131,11 @@ func pullModel() error {
 		} else if strings.Contains(s.Status, "pulling") {
 			parts := strings.SplitN(s.Status, " ", 2)
 			if len(parts) == 2 {
-				fmt.Printf("\r  Pulling %s", parts[1][:12])
+				short := parts[1]
+				if len(short) > 12 {
+					short = short[:12]
+				}
+				fmt.Printf("\r  Pulling %s", short)
 			}
 		} else {
 			fmt.Printf("\r  %s", s.Status)
