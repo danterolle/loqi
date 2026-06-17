@@ -4,8 +4,10 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/danterolle/voca/translate"
@@ -16,64 +18,135 @@ import (
 var Version string
 
 func main() {
-	model := flag.String("model", translate.DefaultModel, "Ollama model to use for translation")
-	flag.Parse()
+	if len(os.Args) > 1 && os.Args[1] == "translate" {
+		runTranslate(os.Args[2:])
+		return
+	}
+	runTUI()
+}
 
-	startedOllama := false
-	var ollamaCmd *exec.Cmd
-
-	printBanner()
-
+func setupOllama(model string) (*exec.Cmd, bool) {
 	if _, err := exec.LookPath("ollama"); err != nil {
-		fmt.Printf("  ✖ ollama not found. Install it from https://ollama.com\n")
+		fmt.Fprintf(os.Stderr, "ollama not found. Install it from https://ollama.com\n")
 		os.Exit(1)
 	}
 
+	started := false
+	var cmd *exec.Cmd
+
 	if !ollama.Reachable() {
 		fmt.Printf("  ◆ Starting Ollama... ")
-		ollamaCmd = exec.Command("ollama", "serve")
-		if err := ollamaCmd.Start(); err != nil {
-			fmt.Printf("\n  ✖ Failed to start Ollama: %v\n", err)
+		cmd = exec.Command("ollama", "serve")
+		if err := cmd.Start(); err != nil {
+			fmt.Fprintf(os.Stderr, "\n  ✖ Failed to start Ollama: %v\n", err)
 			os.Exit(1)
 		}
-		startedOllama = true
+		started = true
 		if !ollama.WaitForReady(30) {
-			fmt.Printf("timeout waiting for Ollama to start\n")
-			ollamaCmd.Process.Kill()
+			fmt.Fprintf(os.Stderr, "  ✖ timeout waiting for Ollama to start\n")
+			if cmd != nil {
+				cmd.Process.Kill()
+			}
 			os.Exit(1)
 		}
 		fmt.Printf("online\n")
 	}
 
-	if !ollama.ModelExists(*model) {
-		fmt.Printf("  ◆ Pulling %s...\n", *model)
-		if err := ollama.PullModel(*model); err != nil {
-			fmt.Printf("  ✖ Pull failed: %v\n", err)
-			if startedOllama && ollamaCmd != nil {
-				ollamaCmd.Process.Kill()
+	if !ollama.ModelExists(model) {
+		fmt.Printf("  ◆ Pulling %s...\n", model)
+		if err := ollama.PullModel(model); err != nil {
+			fmt.Fprintf(os.Stderr, "  ✖ Pull failed: %v\n", err)
+			if started && cmd != nil {
+				cmd.Process.Kill()
 			}
 			os.Exit(1)
 		}
 		fmt.Printf("  ◆ Model ready\n")
 	}
 
+	return cmd, started
+}
+
+func newCore(model string) *translate.Core {
+	return translate.NewCore(
+		ollama.NewBackend("http://localhost:11434", model, translate.NewDefaultPrompt()),
+		translate.NewDefaultPrompt(),
+		translate.NewStaticLanguages(),
+		model,
+	)
+}
+
+func runTranslate(args []string) {
+	fs := flag.NewFlagSet("translate", flag.ExitOnError)
+	from := fs.String("from", "auto", "source language code")
+	to := fs.String("to", "en", "target language code")
+	model := fs.String("model", translate.DefaultModel, "Ollama model")
+	fs.Parse(args)
+
+	text := readInput(fs.Args())
+	if text == "" {
+		fmt.Fprintf(os.Stderr, "Usage: voca translate --from <lang> --to <lang> [text|file|stdin]\n")
+		fs.PrintDefaults()
+		os.Exit(1)
+	}
+
+	printBanner()
+	ollamaCmd, started := setupOllama(*model)
+
+	core := newCore(*model)
+	ui := tui.NewCLIUI(*from, *to, text)
+	if err := ui.Run(context.Background(), core); err != nil {
+		fmt.Fprintf(os.Stderr, "  ✖ Error: %v\n", err)
+		if started && ollamaCmd != nil {
+			ollamaCmd.Process.Kill()
+		}
+		os.Exit(1)
+	}
+
+	if started && ollamaCmd != nil {
+		ollamaCmd.Process.Kill()
+	}
+}
+
+func readInput(args []string) string {
+	if len(args) > 0 {
+		path := args[0]
+		if info, err := os.Stat(path); err == nil && !info.IsDir() {
+			data, err := os.ReadFile(path)
+			if err == nil {
+				return strings.TrimSpace(string(data))
+			}
+		}
+		return strings.Join(args, " ")
+	}
+	stat, _ := os.Stdin.Stat()
+	if (stat.Mode() & os.ModeCharDevice) == 0 {
+		data, err := io.ReadAll(os.Stdin)
+		if err == nil {
+			return strings.TrimSpace(string(data))
+		}
+	}
+	return ""
+}
+
+func runTUI() {
+	model := flag.String("model", translate.DefaultModel, "Ollama model to use for translation")
+	flag.Parse()
+
+	printBanner()
+	ollamaCmd, started := setupOllama(*model)
+
 	fmt.Printf("\n  Starting terminal interface...")
 	time.Sleep(800 * time.Millisecond)
 	fmt.Printf("\n")
 
-	core := translate.NewCore(
-		ollama.NewBackend("http://localhost:11434", *model, translate.NewDefaultPrompt()),
-		translate.NewDefaultPrompt(),
-		translate.NewStaticLanguages(),
-		*model,
-	)
-
+	core := newCore(*model)
 	ui := tui.NewBubbleTeaUI()
 	if err := ui.Run(context.Background(), core); err != nil {
 		fmt.Fprintf(os.Stderr, "  ✖ Error: %v\n", err)
 	}
 
-	if startedOllama && ollamaCmd != nil {
+	if started && ollamaCmd != nil {
 		ollamaCmd.Process.Kill()
 	}
 }
@@ -112,4 +185,3 @@ func printBanner() {
 	fmt.Printf("       \033[38;5;203mVersatile Offline Communication Assistant%s\n", reset)
 	fmt.Println()
 }
-
