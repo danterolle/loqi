@@ -80,6 +80,7 @@ func printBanner() {
 	if Version != "" {
 		fmt.Printf("                    %s\n", Version)
 	}
+	fmt.Println("       Versatile Offline Communication Assistant")
 	fmt.Println()
 }
 
