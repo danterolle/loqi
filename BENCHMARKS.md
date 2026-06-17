@@ -17,7 +17,9 @@ Run on Apple M2 (16 GB RAM) with Ollama. Times are per-sentence averages across 
 | Ministral 3B | 3.85B | 3.0 GB | ~1.2s | Decent on real text, meta-commentary issue |
 | Phi-4 Mini | 3.8B | 2.5 GB | ~1.3s | Good for EU langs, minor errors on others |
 | Llama 3.2 3B | 3B | 2.0 GB | ~1.1s | Decent for EU langs, degrades elsewhere |
+| Gemma 3 1B | 1B | 815 MB | ~0.8s | Surprisingly good for 1B, covers all 14 langs |
 | LFM 2.5 1.2B | 1.2B | 1.2 GB | ~0.7s | Ultra-light, only ~8 usable langs |
+| Qwen3 4B | 4B | 2.5 GB | — | Returns empty — thinking model, unusable for translation |
 
 ## Gemma 4 E2B QAT — default
 
@@ -81,3 +83,24 @@ Run on Apple M2 (16 GB RAM) with Ollama. Times are per-sentence averages across 
 | hi | 1.5s | अगले रात सात बजे दोनो के लिए एक टेबल बुक करना चाहिये। पसंदीदा स्थान खिड़की के पास, गार्डन की दिशा में देखने वाला। • कांग्रेस में कृत्रिम बुद्धिमत्ता, मशीन लर्निंग और विभिन्न देशों में डेटा गोपनीयता नियमों पर चर्चा की जाएगी। • मuseum का नया प्रदर्शन रenaissance कलाकारों के दो सौ से अधिक चित्रों और मूर्तियों को प्रदर्शित करता है, जो दुनिया भर के पर्यटकों को आकर्षित करता है। |
 
 **Average: ~1.2s** — Much better than the pangram test. Main drawback: meta-commentary (notes like *"Adjusted for conciseness"*) appears in ~30% of outputs. Some code-switching (English words mixed in) and minor spelling issues.
+
+## Gemma 3 1B
+
+| Lang | Avg | Outputs (S1 • S2 • S3) |
+|------|-----|------------------------|
+| it | 1.4s | Vorrei prenotare un tavolo per due all'ore settimanale di sette e mezza, preferibilmente vicino alla finestra con vista sul giardino. • La conferenza si concentrerà su argomenti come l'intelligenza artificiale, il machine learning e le normative sulla protezione dei dati in diversi paesi. • L'esposizione del museo presenta oltre duecento dipinti e sculture di artisti rinascimentali, attirando visitatori da tutto il mondo. |
+| fr | 758ms | Je voudrais réserver une table pour deux à sept heures ce soir, de préférence près d'une fenêtre avec vue sur le jardin. • La conférence traitera de sujets tels que l'intelligence artificielle, l'apprentissage automatique et les réglementations en matière de protection des données dans différents pays. • L'exposition du musée présente plus de deux siècles de peintures et de sculptures d'artistes du Renaissance, attirant des visiteurs du monde entier. |
+| de | 733ms | Ich möchte einen Tisch für zwei Personen am Abend um sieben Uhr gerne in der Nähe des Fensters mit Blick auf den Garten reservieren. • Die Konferenz wird sich mit Themen wie künstliche Intelligenz, maschinellem Lernen und Datenschutzbestimmungen in verschiedenen Ländern befassen. • Das Museum präsentiert eine neue Ausstellung mit über zwei hundert Gemälden und Skulpturen von Renaissance Künstlern, die Besucher aus aller Welt anziehen. |
+| es | 733ms | Quisiera reservar una mesa para dos esta tarde a las siete y media, preferiblemente cerca de la ventana con vistas al jardín. • La conferencia cubrirá temas como la inteligencia artificial, el aprendizaje automático y las regulaciones de privacidad sobre datos en diferentes países. • El museo presenta una nueva exposición que incluye más de doscientos pinturas y esculturas de artistas renacentistas, atrayendo a visitantes de todo el mundo. |
+| pt | 719ms | Quero reservar uma mesa para dois esta noite às sete e meia, preferencialmente perto da janela com vista ao jardim. • A conferência abordará tópicos como inteligência artificial, aprendizado de máquina e regulamentos de privacidade de dados em diferentes países. • A exposição do museu tem mais de duas centenas de pinturas e esculturas de artistas renascentistas, atraindo visitantes de todo o mundo. |
+| nl | 758ms | Ik wil een tafel voor twee zetten bij zeven uur 's middags, graag in de hoek met uitzicht op het tuin. • De conferentie zal zich richten op onderwerpen zoals kunstmatige intelligentie, machine learning en gegevensprivacywetgeving in verschillende landen. • Het museum's nieuwe tentoonstelling bevat meer dan twee honderden schilderijen en sculpturen van renaissance kunstenaars, waardoor bezoekers uit het hele wereld komen. |
+| pl | 848ms | Chcę zarezerwować stół na dwa osoby o siedmiu nad ranem, najlepiej blisko okna z widokiem na ogród. • Konferencja będzie dotyczyć tematów takich jak sztuczna inteligencja, uczenie maszynowe i regulacje dotyczące prywatności danych w różnych krajach. • Muzeum prezentuje nową wystawę składającą się z ponad dwóch set obrazów i rzeźb przedstawionych przez artystów renesansowych, przyciągając zwiedzających z całego świata. |
+| ru | 758ms | Я хотел бы забронировать столик на двоих в семи вечера этого дня, желательно рядом с окном с видом на сад. • Конференция будет охватывать темы, такие как искусственный интеллект, машинное обучение и правила защиты данных в разных странах. • В музее открылась новая выставка, в которой представлены более двухсот картин и скульптур от ренессансных художников, привлекающих посетителей со всего мира. |
+| ja | 761ms | 予約したいです。7時を過ぎてから、庭の眺めが見える窓際の席で2人分お願いします。 • 会議では、人工知能、機械学習、およびデータプライバシー規制など、さまざまな国で議論される様々なトピックについてカバーします。 • 博物館の新しい展示会には、近世の芸術家によって描かれた約200枚の絵画と彫刻が含まれており、世界中の人々が訪れます。 |
+| zh | 641ms | 我想要预订一个对十点钟钟声的桌子，最好在花园附近的一个窗户旁边。 • 会议将涵盖人工智能、机器学习和数据隐私法规等在不同国家中的主题。 • 博物馆的新展览展示了近200幅油画和雕塑作品，来自全世界各地的游客。 |
+| ko | 779ms | 저는 오늘 저녁 7시쯤에 두 명의 테이블을 예약하고 싶습니다. 창가 근처에서 정원 전망으로 보이는 것을 선호합니다. • 컨퍼런스는 인공지능, 머신러닝 및 데이터 프라이버시 규제 등 다양한 국가에서 다루는 주제로 구성될 것입니다. • 미술관의 새로운 전시에는 200가지 그림과 조각품이 있으며, 전 세계에서 방문객을 유치합니다. |
+| ar | 835ms | أريد حجز طاولة لـ شخصين في سبعة مساءً، وأفضل أن تكون بالقرب من النافذة مع منظر إلى الحديقة. • المؤتمر سيتناول مواضيع مثل الذكاء الاصطناعي والتعلم الآلي وحماية البيانات وتوافر البيانات في مختلف البلدان. • المتحف يعرض معرضًا جديدًا يضم أكثر من ٢٠٠ لوحة و منحوتات لفنانين عصر النهضة، ويجذب الزوار من جميع أنحاء العالم. |
+| tr | 884ms | Lütfen iki için bu akşam saat 17:00'da bir masaya rezervasyon yapın, bahçeye bakacak bir pencere yakınında olmasını istiyorum. • Konferans, yapay zeka, makine öğrenimi ve veri gizliliği düzenlemeleri gibi farklı ülkelerde farklı konuları kapsayacak. • Müze'nin yeni sergisi, 200 yağmalık ve heykeltıraş sanatçılardan oluşan överen yüzlerce tuval ve heykelden oluşmaktadır ve dünya çapındaki ziyaretçileri cezbedmektedir. |
+| hi | 752ms | मैं शाम को दो लोगों के लिए टेबल बुक करना चाहता हूँ, जो सात बजे पर करीब खिड़की से बगीचे का दृश्य प्रस्तुत करे। • सम्मेलन आर्टिफिशियल इंटेलिजेंस, मशीन लर्निंग और डेटा गोपनीयता नियमों को विभिन्न देशों में अलग-अलग विषयों पर कवर करेगा। • लम्बे रंग और मूर्तियों की एक नई प्रदर्शनी संग्रहालय में है, जो रिनेंटाल्ड कलाकारों से आने वाले सभी दुनिया भर के आगंतुकों को आकर्षित करती हैं। |
+
+**Average: ~0.8s** — impressive for 815 MB. Covers all 14 languages where LFM 1.2B failed. Main issues: time expression errors ("half past seven" for "seven o'clock"), gender agreement errors in Romance languages, Renaissance/"近世" confusion, some Asian details lost.
