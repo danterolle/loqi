@@ -23,6 +23,10 @@ func main() {
 			runTranslate(os.Args[2:])
 			return
 		}
+		if os.Args[1] == "batch" {
+			runBatch(os.Args[2:])
+			return
+		}
 		if os.Args[1] == "-h" || os.Args[1] == "--help" {
 			printUsage()
 			return
@@ -36,6 +40,7 @@ func printUsage() {
 	fmt.Println("Usage:")
 	fmt.Println("  voca                   Start the terminal UI (default)")
 	fmt.Println("  voca translate [flags] <text|file>   One-shot translation")
+	fmt.Println("  voca batch [flags] <file.json>       Batch translate JSON values")
 	fmt.Println()
 	fmt.Println("Flags:")
 	fmt.Println("  -h, --help            Show this help message")
@@ -46,6 +51,13 @@ func printUsage() {
 	fs.String("to", "en", "target language code")
 	fs.String("model", translate.DefaultModel, "Ollama model")
 	fs.PrintDefaults()
+	fmt.Println()
+	fmt.Println("Batch subcommand flags:")
+	bs := flag.NewFlagSet("batch", flag.ExitOnError)
+	bs.String("from", "auto", "source language code")
+	bs.String("to", "en", "target language code")
+	bs.String("model", translate.DefaultModel, "Ollama model")
+	bs.PrintDefaults()
 }
 
 func setupOllama(model string) (*exec.Cmd, bool) {
@@ -164,6 +176,62 @@ func readInput(args []string) string {
 		}
 	}
 	return ""
+}
+
+func runBatch(args []string) {
+	fs := flag.NewFlagSet("batch", flag.ExitOnError)
+	from := fs.String("from", "auto", "source language code")
+	to := fs.String("to", "en", "target language code")
+	model := fs.String("model", translate.DefaultModel, "Ollama model")
+	h := fs.Bool("h", false, "show help")
+	help := fs.Bool("help", false, "show help")
+	fs.Parse(args)
+
+	if *h || *help {
+		printBanner()
+		fmt.Println("Usage: voca batch [flags] [file.json]")
+		fmt.Println()
+		fs.PrintDefaults()
+		fmt.Println()
+		fmt.Println("Examples:")
+		fmt.Println(`  voca batch --from en --to it < locales/en.json`)
+		fmt.Println(`  voca batch --from en --to it locales/en.json`)
+		os.Exit(0)
+	}
+
+	input, err := readStdinOrFile(fs.Args())
+	if err != nil || len(input) == 0 {
+		fmt.Fprintf(os.Stderr, "Usage: voca batch --from <lang> --to <lang> [file.json]\n")
+		fs.PrintDefaults()
+		os.Exit(1)
+	}
+
+	ollamaCmd, started := setupOllama(*model)
+	core := newCore(*model)
+	ctx := context.Background()
+
+	output, err := translate.TranslateJSON(ctx, core, input, *from, *to)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "  ✖ Error: %v\n", err)
+		if started && ollamaCmd != nil {
+			ollamaCmd.Process.Kill()
+		}
+		os.Exit(1)
+	}
+
+	os.Stdout.Write(output)
+	fmt.Println()
+
+	if started && ollamaCmd != nil {
+		ollamaCmd.Process.Kill()
+	}
+}
+
+func readStdinOrFile(args []string) ([]byte, error) {
+	if len(args) > 0 {
+		return os.ReadFile(args[0])
+	}
+	return io.ReadAll(os.Stdin)
 }
 
 func runTUI() {
