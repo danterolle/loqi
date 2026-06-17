@@ -57,7 +57,7 @@ Interactive terminal interface with auto-translate as you type.
 | Key | Action |
 |-----|--------|
 | `Tab` / `Shift+Tab` | Cycle focus (source → target → input) |
-| `←` `→` | Change language when focused |
+| `↑` `↓` | Change language when focused |
 | `Ctrl+Y` | Copy translation to clipboard |
 | `Ctrl+L` | Clear input and output |
 | `Ctrl+T` | Swap source/target languages |

@@ -67,13 +67,13 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m.advanceFocus(), nil
 		case "shift+tab":
 			return m.retreatFocus(), nil
-		case "left":
+		case "up":
 			if m.focused == focusSrcLang && m.srcIdx > 0 {
 				m.srcIdx--
 			} else if m.focused == focusTgtLang && m.tgtIdx > 0 {
 				m.tgtIdx--
 			}
-		case "right":
+		case "down":
 			if m.focused == focusSrcLang && m.srcIdx < len(m.langCodes)-1 {
 				m.srcIdx++
 			} else if m.focused == focusTgtLang && m.tgtIdx < len(m.langCodes)-1 {

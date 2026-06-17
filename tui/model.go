@@ -18,6 +18,7 @@ const (
 )
 
 const debounceDuration = 600 * time.Millisecond
+const langListVisible = 15
 
 type (
 	debounceMsg struct {

@@ -34,19 +34,23 @@ func (m Model) View() string {
 	}
 	b.WriteString("\n\n")
 
-	b.WriteString(inputStyle.Render("Input"))
-	b.WriteString("\n")
-	b.WriteString(m.textarea.View())
-	b.WriteString("\n\n")
-
-	b.WriteString(outputStyle.Render("Output"))
-	b.WriteString("\n")
-	if m.output != "" {
-		b.WriteString(wrap(m.output, m.width-4))
-		b.WriteString("\n")
+	if m.focused == focusSrcLang || m.focused == focusTgtLang {
+		b.WriteString(m.languageListView())
 	} else {
-		b.WriteString(subtleStyle.Render("Translation will appear here..."))
+		b.WriteString(inputStyle.Render("Input"))
 		b.WriteString("\n")
+		b.WriteString(m.textarea.View())
+		b.WriteString("\n\n")
+
+		b.WriteString(outputStyle.Render("Output"))
+		b.WriteString("\n")
+		if m.output != "" {
+			b.WriteString(wrap(m.output, m.width-4))
+			b.WriteString("\n")
+		} else {
+			b.WriteString(subtleStyle.Render("Translation will appear here..."))
+			b.WriteString("\n")
+		}
 	}
 
 	b.WriteString(strings.Repeat("─", max(m.width-2, 0)))
@@ -54,6 +58,55 @@ func (m Model) View() string {
 	b.WriteString(m.status)
 	b.WriteString("  ")
 	b.WriteString(helpStyle.Render("ctrl+y:copy  ctrl+l:clear  ctrl+t:swap  ctrl+c:quit  tab:next"))
+
+	return b.String()
+}
+
+func (m Model) languageListView() string {
+	var b strings.Builder
+
+	label := "Source"
+	idx := m.srcIdx
+	if m.focused == focusTgtLang {
+		label = "Target"
+		idx = m.tgtIdx
+	}
+
+	b.WriteString(fmt.Sprintf("  %s language (↑↓ to navigate, Tab to confirm)\n\n", label))
+
+	total := len(m.langCodes)
+	start := idx - langListVisible/2
+	if start < 0 {
+		start = 0
+	}
+	if start+langListVisible > total {
+		start = total - langListVisible
+	}
+	if start < 0 {
+		start = 0
+	}
+	end := start + langListVisible
+	if end > total {
+		end = total
+	}
+
+	if start > 0 {
+		b.WriteString("    ...\n")
+	}
+	for i := start; i < end; i++ {
+		cursor := "  "
+		style := subtleStyle.Render
+		if i == idx {
+			cursor = " >"
+			style = inputStyle.Bold(true).Render
+		}
+		code := m.langCodes[i]
+		name := m.langNames[code]
+		b.WriteString(fmt.Sprintf("%s %s\n", cursor, style(fmt.Sprintf("%-5s %s", code, name))))
+	}
+	if end < total {
+		b.WriteString("    ...\n")
+	}
 
 	return b.String()
 }
