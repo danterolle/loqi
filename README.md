@@ -1,6 +1,6 @@
 # VOCA
 
-100% local TUI translator.
+Local-first translation tool for desktop and developer workflows. Translate text, files, docs, and structured content using local LLMs. Replaces manual copy-pasting to DeepL / Google Translate when working on a computer.
 
 ## Features
 
