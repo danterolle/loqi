@@ -75,6 +75,7 @@ func printBanner() {
 	fmt.Println("  ╚██╗ ██╔╝██║   ██║██║     ██╔══██║")
 	fmt.Println("   ╚████╔╝ ╚██████╔╝╚██████╗██║  ██║")
 	fmt.Println("    ╚═══╝   ╚═════╝  ╚═════╝╚═╝  ╚═╝")
+	fmt.Printf("                    %s\n", Version)
 	fmt.Println()
 }
 
