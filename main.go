@@ -53,7 +53,9 @@ func main() {
 		fmt.Printf("  ◆ Model ready\n")
 	}
 
-	fmt.Printf("\n  Starting terminal interface...\n\n")
+	fmt.Printf("\n  Starting terminal interface...")
+	time.Sleep(800 * time.Millisecond)
+	fmt.Printf("\n")
 
 	p := tea.NewProgram(tui.InitialModel(), tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
