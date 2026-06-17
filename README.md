@@ -4,8 +4,6 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 [![Go Report Card](https://goreportcard.com/badge/github.com/danterolle/voca)](https://goreportcard.com/report/github.com/danterolle/voca)
 
----
-
 Local-first translation tool for desktop and developer workflows. Translate text, files, docs, and structured content using local LLMs.
 
 **Why VOCA?** Every translation stays on your machine. No data sent to Google, DeepL or whatever. Designed for the terminal, so you can make it scriptable, pipeable, and integrable into your existing workflow. Replaces manual copy-pasting to DeepL/Google Translate when working on a computer.
@@ -19,8 +17,6 @@ Local-first translation tool for desktop and developer workflows. Translate text
 - [TUI mode](#tui-mode)
 - [CLI mode](#cli-mode-one-shot)
 - [Benchmarks](#benchmarks)
-
----
 
 ## Installation
 
@@ -36,7 +32,7 @@ make build
 
 **Makefile:**
 ```bash
-make build              # build for current OS
+make build
 make build-linux        # cross-compile for Linux
 make build-windows      # cross-compile for Windows
 make build-darwin       # cross-compile for macOS
@@ -49,7 +45,6 @@ make stop               # kill ollama
 ## Quick start
 
 ```bash
-# Launch the terminal UI
 voca
 
 # Run a one-shot translation
@@ -58,8 +53,6 @@ voca translate --from en --to it "Hello world"
 # Use a different model
 voca --model phi4-mini:latest
 ```
-
----
 
 ## TUI mode
 
@@ -79,8 +72,6 @@ Interactive terminal interface with auto-translate as you type.
 | `Ctrl+L` | Clear input and output |
 | `Ctrl+T` | Swap source/target languages |
 | `Ctrl+C` / `Esc` | Quit |
-
----
 
 ## CLI mode (one-shot)
 
@@ -110,13 +101,9 @@ voca translate --from it --to en test_data/malavoglia.md
 --model   Ollama model (default: gemma4:e2b-it-qat)
 ```
 
----
-
 ## Benchmarks
 
 See [BENCHMARKS.md](BENCHMARKS.md) for multi-sentence translation quality and speed benchmarks across 6 models and 14 languages.
-
----
 
 ## License
 
