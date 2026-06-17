@@ -82,6 +82,31 @@ voca translate --from it --to en test_data/malavoglia.md
 -h, --help    Show usage with examples
 ```
 
+## Batch mode
+
+Translate JSON values or text files in one pass.
+
+```bash
+# Translate all string values in a JSON file
+voca batch --from en --to it locales/en.json > locales/it.json
+
+# Translate a text file
+voca batch --from en --to fr README.md
+
+# Pipe JSON or text from stdin
+echo '{"msg": "Hello"}' | voca batch --from en --to it
+```
+
+Auto-detects JSON (preserves structure, translates values) vs plain text (translates whole content).
+
+**Flags:**
+```
+--from        Source language code (default: auto)
+--to          Target language code (default: en)
+--model       Ollama model (default: gemma4:e2b-it-qat)
+-h, --help    Show usage with examples
+```
+
 ## Benchmarks
 
 See [BENCHMARKS.md](BENCHMARKS.md) for multi-sentence translation quality and speed benchmarks across 6 models and 14 languages.
