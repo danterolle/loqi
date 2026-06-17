@@ -5,8 +5,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/danterolle/voca/translate"
 )
@@ -31,6 +33,7 @@ type Backend struct {
 	BaseURL string
 	Model   string
 	Prompt  translate.PromptBuilder
+	Client  *http.Client
 }
 
 func NewBackend(baseURL, model string, prompt translate.PromptBuilder) *Backend {
@@ -38,6 +41,9 @@ func NewBackend(baseURL, model string, prompt translate.PromptBuilder) *Backend 
 		BaseURL: baseURL,
 		Model:   model,
 		Prompt:  prompt,
+		Client: &http.Client{
+			Timeout: 2 * time.Minute,
+		},
 	}
 }
 
@@ -74,11 +80,16 @@ func (b *Backend) Translate(ctx context.Context, text, source, target string) (s
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := b.Client.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("ollama: %w", err)
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		body, _ := io.ReadAll(resp.Body)
+		return "", fmt.Errorf("ollama: %s %s", resp.Status, strings.TrimSpace(string(body)))
+	}
 
 	var cr chatResponse
 	if err := json.NewDecoder(resp.Body).Decode(&cr); err != nil {
