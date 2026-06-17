@@ -86,4 +86,3 @@ func TestMockBackend_CustomFunc(t *testing.T) {
 		t.Fatalf("expected 'custom', got %q", result)
 	}
 }
-
