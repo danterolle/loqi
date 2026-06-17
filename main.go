@@ -18,47 +18,62 @@ import (
 func main() {
 	startedOllama := false
 
+	printBanner()
+
 	if _, err := exec.LookPath("ollama"); err != nil {
-		fmt.Fprintf(os.Stderr, "ollama not found in PATH. Install it from https://ollama.com\n")
+		fmt.Printf("  ✖ ollama not found. Install it from https://ollama.com\n")
 		os.Exit(1)
 	}
 
 	if !ollamaReachable() {
-		fmt.Print("Starting Ollama... ")
+		fmt.Printf("  ◆ Starting Ollama... ")
 		cmd := exec.Command("ollama", "serve")
 		if err := cmd.Start(); err != nil {
-			fmt.Fprintf(os.Stderr, "\nFailed to start Ollama: %v\n", err)
+			fmt.Printf("\n  ✖ Failed to start Ollama: %v\n", err)
 			os.Exit(1)
 		}
 		startedOllama = true
 		if !waitForOllama(30) {
-			fmt.Println("timeout waiting for Ollama to start")
+			fmt.Printf("timeout waiting for Ollama to start\n")
 			cmd.Process.Kill()
 			os.Exit(1)
 		}
-		fmt.Println("done.")
+		fmt.Printf("online\n")
 	}
 
 	if !modelExists() {
-		fmt.Printf("Pulling %s...\n", translate.DefaultModel)
+		fmt.Printf("  ◆ Pulling %s...\n", translate.DefaultModel)
 		if err := pullModel(); err != nil {
-			fmt.Fprintf(os.Stderr, "Pull failed: %v\n", err)
+			fmt.Printf("  ✖ Pull failed: %v\n", err)
 			if startedOllama {
-				exec.Command("pkill", "ollama").Run()
+				pkill("ollama")
 			}
 			os.Exit(1)
 		}
-		fmt.Println("Model ready.")
+		fmt.Printf("  ◆ Model ready\n")
 	}
+
+	fmt.Printf("\n  Starting terminal interface...\n\n")
 
 	p := tea.NewProgram(tui.InitialModel(), tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		fmt.Fprintf(os.Stderr, "  ✖ Error: %v\n", err)
 	}
 
 	if startedOllama {
 		pkill("ollama")
 	}
+}
+
+func printBanner() {
+	fmt.Println()
+	fmt.Println("  ██╗   ██╗ ██████╗  ██████╗ █████╗ ")
+	fmt.Println("  ██║   ██║██╔═══██╗██╔════╝██╔══██╗")
+	fmt.Println("  ██║   ██║██║   ██║██║     ███████║")
+	fmt.Println("  ╚██╗ ██╔╝██║   ██║██║     ██╔══██║")
+	fmt.Println("   ╚████╔╝ ╚██████╔╝╚██████╗██║  ██║")
+	fmt.Println("    ╚═══╝   ╚═════╝  ╚═════╝╚═╝  ╚═╝")
+	fmt.Println()
 }
 
 func ollamaReachable() bool {
@@ -125,9 +140,10 @@ func pullModel() error {
 		}
 		if s.Total > 0 {
 			pct := float64(s.Completed) / float64(s.Total) * 100
-			fmt.Printf("\r  Downloading... %.0f%%", pct)
+			bar := progressBar(pct, 30)
+			fmt.Printf("\r     %s  %.0f%%", bar, pct)
 		} else if s.Status == "success" {
-			fmt.Println("\r  Done!               ")
+			fmt.Printf("\r     %s  100%%\n", progressBar(100, 30))
 		} else if strings.Contains(s.Status, "pulling") {
 			parts := strings.SplitN(s.Status, " ", 2)
 			if len(parts) == 2 {
@@ -135,13 +151,26 @@ func pullModel() error {
 				if len(short) > 12 {
 					short = short[:12]
 				}
-				fmt.Printf("\r  Pulling %s", short)
+				fmt.Printf("\r     Pulling %s...", short)
 			}
+		} else if s.Status == "verifying sha256 digest" {
+			fmt.Printf("\r     Verifying...")
+		} else if s.Status == "writing manifest" {
+			fmt.Printf("\r     Writing manifest...")
 		} else {
-			fmt.Printf("\r  %s", s.Status)
+			fmt.Printf("\r     %s", s.Status)
 		}
 	}
 	return scanner.Err()
+}
+
+func progressBar(pct float64, width int) string {
+	filled := int(pct * float64(width) / 100)
+	if filled > width {
+		filled = width
+	}
+	bar := strings.Repeat("█", filled) + strings.Repeat("░", width-filled)
+	return bar
 }
 
 func pkill(name string) {
