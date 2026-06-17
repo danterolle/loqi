@@ -42,7 +42,7 @@ func (m Model) View() string {
 	b.WriteString(outputStyle.Render("Output"))
 	b.WriteString("\n")
 	if m.output != "" {
-		b.WriteString(m.output)
+		b.WriteString(wrap(m.output, m.width-4))
 		b.WriteString("\n")
 	} else {
 		b.WriteString(subtleStyle.Render("Translation will appear here..."))
@@ -56,4 +56,33 @@ func (m Model) View() string {
 	b.WriteString(helpStyle.Render("ctrl+y:copy  ctrl+l:clear  ctrl+t:swap  ctrl+c:quit  tab:next"))
 
 	return b.String()
+}
+
+func wrap(s string, width int) string {
+	if width <= 0 {
+		return s
+	}
+	var result strings.Builder
+	for _, line := range strings.Split(s, "\n") {
+		words := strings.Fields(line)
+		if len(words) == 0 {
+			result.WriteByte('\n')
+			continue
+		}
+		n := 0
+		for _, w := range words {
+			if n+len(w) > width {
+				result.WriteByte('\n')
+				n = 0
+			}
+			if n > 0 {
+				result.WriteByte(' ')
+				n++
+			}
+			result.WriteString(w)
+			n += len(w)
+		}
+		result.WriteByte('\n')
+	}
+	return strings.TrimRight(result.String(), "\n")
 }
