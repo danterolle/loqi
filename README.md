@@ -53,6 +53,8 @@ make stop               # kill ollama
 
 Auto, English, Italian, French, German, Spanish, Portuguese, Dutch, Polish, Russian, Japanese, Chinese, Korean, Arabic, Turkish, Czech, Swedish, Danish, Finnish, Greek, Romanian, Hungarian, Vietnamese, Thai, Hindi.
 
+> The app provides 25 language labels, but actual translation quality depends on the model. Smaller models may only handle European languages well or produce nonsense on some targets. See [BENCHMARKS.md](BENCHMARKS.md) for per-model language coverage.
+
 ## Benchmarks
 
 See [BENCHMARKS.md](BENCHMARKS.md) for multi-sentence translation quality and speed benchmarks across 6 models and 14 languages.

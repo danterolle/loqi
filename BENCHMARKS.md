@@ -1,6 +1,6 @@
 # Benchmark (EN → 14 languages)
 
-Three medium-length sentences across different domains:
+Run on Apple M2 (16 GB RAM) with Ollama. Times are per-sentence averages across 3 sentences.
 
 > **S1 (Booking):** "I would like to book a table for two at seven o'clock this evening, preferably near the window with a view of the garden."
 >
