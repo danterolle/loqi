@@ -16,6 +16,21 @@ import (
 const defaultFrom = "auto"
 const defaultTo = "en"
 
+func parseTranslateFlags(name string, args []string, defaultModel string) (model, from, to string, fs *flag.FlagSet, h, help *bool) {
+	model = defaultModel
+	from = defaultFrom
+	to = defaultTo
+
+	fs = flag.NewFlagSet(name, flag.ExitOnError)
+	fs.StringVar(&model, "model", model, "translation model")
+	fs.StringVar(&from, "from", from, "source language code")
+	fs.StringVar(&to, "to", to, "target language code")
+	h = fs.Bool("h", false, "show help")
+	help = fs.Bool("help", false, "show help")
+	fs.Parse(args)
+	return
+}
+
 func readFloat64Option(opts map[string]any, key string) (float64, bool) {
 	v, ok := opts[key]
 	if !ok {
@@ -78,17 +93,7 @@ func setupRun(cfg *config.Config, model string) (*translate.Core, func()) {
 }
 
 func runTranslate(cfg *config.Config, args []string) {
-	model := cfg.Backend.Model
-	from := defaultFrom
-	to := defaultTo
-
-	fs := flag.NewFlagSet("translate", flag.ExitOnError)
-	fs.StringVar(&model, "model", model, "translation model")
-	fs.StringVar(&from, "from", from, "source language code")
-	fs.StringVar(&to, "to", to, "target language code")
-	h := fs.Bool("h", false, "show help")
-	help := fs.Bool("help", false, "show help")
-	fs.Parse(args)
+	model, from, to, fs, h, help := parseTranslateFlags("translate", args, cfg.Backend.Model)
 
 	if *h || *help {
 		printBanner()
@@ -121,17 +126,7 @@ func runTranslate(cfg *config.Config, args []string) {
 }
 
 func runBatch(cfg *config.Config, args []string) {
-	model := cfg.Backend.Model
-	from := defaultFrom
-	to := defaultTo
-
-	fs := flag.NewFlagSet("batch", flag.ExitOnError)
-	fs.StringVar(&model, "model", model, "translation model")
-	fs.StringVar(&from, "from", from, "source language code")
-	fs.StringVar(&to, "to", to, "target language code")
-	h := fs.Bool("h", false, "show help")
-	help := fs.Bool("help", false, "show help")
-	fs.Parse(args)
+	model, from, to, fs, h, help := parseTranslateFlags("batch", args, cfg.Backend.Model)
 
 	if *h || *help {
 		printBanner()
