@@ -10,7 +10,15 @@ import (
 
 const batchWorkers = 3
 
-var translateSem = make(chan struct{}, batchWorkers)
+type jsonTranslator struct {
+	core   *Core
+	from   string
+	to     string
+	wg     sync.WaitGroup
+	errCh  chan error
+	cancel context.CancelFunc
+	sem    chan struct{}
+}
 
 func Batch(ctx context.Context, core *Core, input []byte, from, to string) ([]byte, error) {
 	if json.Valid(input) {
@@ -40,14 +48,20 @@ func translateJSON(ctx context.Context, core *Core, data *any, from, to string) 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	var wg sync.WaitGroup
-	errCh := make(chan error, 1)
+	t := &jsonTranslator{
+		core:   core,
+		from:   from,
+		to:     to,
+		errCh:  make(chan error, 1),
+		cancel: cancel,
+		sem:    make(chan struct{}, batchWorkers),
+	}
 
-	processNode(ctx, core, data, from, to, &wg, errCh, cancel)
+	t.processNode(ctx, data)
 
 	done := make(chan struct{})
 	go func() {
-		wg.Wait()
+		t.wg.Wait()
 		close(done)
 	}()
 
@@ -57,14 +71,14 @@ func translateJSON(ctx context.Context, core *Core, data *any, from, to string) 
 	}
 
 	select {
-	case err := <-errCh:
+	case err := <-t.errCh:
 		return err
 	default:
 		return nil
 	}
 }
 
-func processNode(ctx context.Context, core *Core, val *any, from, to string, wg *sync.WaitGroup, errCh chan error, cancel context.CancelFunc) {
+func (t *jsonTranslator) processNode(ctx context.Context, val *any) {
 	select {
 	case <-ctx.Done():
 		return
@@ -76,17 +90,17 @@ func processNode(ctx context.Context, core *Core, val *any, from, to string, wg 
 		if v == "" {
 			return
 		}
-		translateString(ctx, core, val, from, to, errCh, cancel)
+		t.translateString(ctx, val)
 
 	case map[string]any:
-		processMapNode(ctx, core, v, from, to, wg, errCh, cancel)
+		t.processMapNode(ctx, v)
 
 	case []any:
-		processSliceNode(ctx, core, v, from, to, wg, errCh, cancel)
+		t.processSliceNode(ctx, v)
 	}
 }
 
-func processMapNode(ctx context.Context, core *Core, v map[string]any, from, to string, wg *sync.WaitGroup, errCh chan error, cancel context.CancelFunc) {
+func (t *jsonTranslator) processMapNode(ctx context.Context, v map[string]any) {
 	type entry struct {
 		key string
 		val any
@@ -97,11 +111,11 @@ func processMapNode(ctx context.Context, core *Core, v map[string]any, from, to 
 	}
 	var mu sync.Mutex
 	for _, e := range entries {
-		wg.Add(1)
+		t.wg.Add(1)
 		go func() {
-			defer wg.Done()
+			defer t.wg.Done()
 			childCopy := e.val
-			processNode(ctx, core, &childCopy, from, to, wg, errCh, cancel)
+			t.processNode(ctx, &childCopy)
 			if ctx.Err() != nil {
 				return
 			}
@@ -112,13 +126,13 @@ func processMapNode(ctx context.Context, core *Core, v map[string]any, from, to 
 	}
 }
 
-func processSliceNode(ctx context.Context, core *Core, v []any, from, to string, wg *sync.WaitGroup, errCh chan error, cancel context.CancelFunc) {
+func (t *jsonTranslator) processSliceNode(ctx context.Context, v []any) {
 	for i, child := range v {
-		wg.Add(1)
+		t.wg.Add(1)
 		go func() {
-			defer wg.Done()
+			defer t.wg.Done()
 			childCopy := child
-			processNode(ctx, core, &childCopy, from, to, wg, errCh, cancel)
+			t.processNode(ctx, &childCopy)
 			if ctx.Err() != nil {
 				return
 			}
@@ -127,23 +141,23 @@ func processSliceNode(ctx context.Context, core *Core, v []any, from, to string,
 	}
 }
 
-func translateString(ctx context.Context, core *Core, val *any, from, to string, errCh chan error, cancel context.CancelFunc) {
+func (t *jsonTranslator) translateString(ctx context.Context, val *any) {
 	select {
-	case translateSem <- struct{}{}:
+	case t.sem <- struct{}{}:
 	case <-ctx.Done():
 		return
 	}
 
 	v := (*val).(string)
-	result, err := core.Translate(ctx, v, from, to)
-	<-translateSem
+	result, err := t.core.Translate(ctx, v, t.from, t.to)
+	<-t.sem
 
 	if err != nil {
 		select {
-		case errCh <- err:
+		case t.errCh <- err:
 		default:
 		}
-		cancel()
+		t.cancel()
 		return
 	}
 	*val = result
