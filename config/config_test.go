@@ -34,6 +34,9 @@ func TestDefault_BackendOptions(t *testing.T) {
 	if cfg.Backend.Options["num_predict"] != float64(2048) {
 		t.Fatalf("expected num_predict 2048, got %v", cfg.Backend.Options["num_predict"])
 	}
+	if cfg.Backend.Options["timeout"] != float64(120) {
+		t.Fatalf("expected timeout 120, got %v", cfg.Backend.Options["timeout"])
+	}
 }
 
 func TestLoad_FileNotFound(t *testing.T) {

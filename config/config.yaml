@@ -14,3 +14,4 @@ backend:
     temperature: 0.0
     num_predict: 2048
     top_p: 1.0
+    timeout: 120               # HTTP client timeout in seconds

@@ -34,6 +34,7 @@ func Default() *Config {
 				"temperature": 0.0,
 				"num_predict": float64(2048),
 				"top_p":       1.0,
+				"timeout":     float64(120),
 			},
 		},
 	}

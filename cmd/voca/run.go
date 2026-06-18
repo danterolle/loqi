@@ -24,6 +24,14 @@ func newCore(cfg *config.Config, model string) *translate.Core {
 			backend.NumPredict = int(v)
 		}
 	}
+	if to, ok := cfg.Backend.Options["timeout"]; ok {
+		switch v := to.(type) {
+		case int:
+			backend.Client.Timeout = time.Duration(v) * time.Second
+		case float64:
+			backend.Client.Timeout = time.Duration(v) * time.Second
+		}
+	}
 	return translate.NewCore(backend, translate.NewStaticLanguages())
 }
 
