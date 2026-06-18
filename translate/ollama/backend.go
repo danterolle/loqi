@@ -63,6 +63,31 @@ func (b *Backend) Translate(ctx context.Context, text, source, target string) (s
 		return text, nil
 	}
 
+	req, err := b.buildRequest(ctx, text, source, target)
+	if err != nil {
+		return "", err
+	}
+
+	resp, err := b.Client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("ollama: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		body, _ := io.ReadAll(resp.Body)
+		return "", fmt.Errorf("ollama: %s %s", resp.Status, strings.TrimSpace(string(body)))
+	}
+
+	var cr chatResponse
+	if err := json.NewDecoder(resp.Body).Decode(&cr); err != nil {
+		return "", fmt.Errorf("decode: %w", err)
+	}
+
+	return strings.TrimSpace(cr.Message.Content), nil
+}
+
+func (b *Backend) buildRequest(ctx context.Context, text, source, target string) (*http.Request, error) {
 	options := map[string]any{
 		"temperature": b.Temperature,
 		"top_p":       b.TopP,
@@ -83,30 +108,13 @@ func (b *Backend) Translate(ctx context.Context, text, source, target string) (s
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(body); err != nil {
-		return "", fmt.Errorf("encode: %w", err)
+		return nil, fmt.Errorf("encode: %w", err)
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, b.BaseURL+"/api/chat", &buf)
 	if err != nil {
-		return "", fmt.Errorf("request: %w", err)
+		return nil, fmt.Errorf("request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := b.Client.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("ollama: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		body, _ := io.ReadAll(resp.Body)
-		return "", fmt.Errorf("ollama: %s %s", resp.Status, strings.TrimSpace(string(body)))
-	}
-
-	var cr chatResponse
-	if err := json.NewDecoder(resp.Body).Decode(&cr); err != nil {
-		return "", fmt.Errorf("decode: %w", err)
-	}
-
-	return strings.TrimSpace(cr.Message.Content), nil
+	return req, nil
 }
