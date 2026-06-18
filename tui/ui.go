@@ -10,13 +10,7 @@ import (
 	"github.com/danterolle/voca/translate"
 )
 
-type BubbleTeaUI struct{}
-
-func NewBubbleTeaUI() *BubbleTeaUI {
-	return &BubbleTeaUI{}
-}
-
-func (u *BubbleTeaUI) Run(ctx context.Context, core *translate.Core) error {
+func RunBubbleTea(ctx context.Context, core *translate.Core) error {
 	defer func() {
 		if r := recover(); r != nil {
 			fmt.Fprintf(os.Stderr, "  ✖ panic: %v\n", r)

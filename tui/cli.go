@@ -7,18 +7,8 @@ import (
 	"github.com/danterolle/voca/translate"
 )
 
-type CLIUI struct {
-	Source string
-	Target string
-	Text   string
-}
-
-func NewCLIUI(source, target, text string) *CLIUI {
-	return &CLIUI{Source: source, Target: target, Text: text}
-}
-
-func (u *CLIUI) Run(ctx context.Context, core *translate.Core) error {
-	result, err := core.Translate(ctx, u.Text, u.Source, u.Target)
+func RunCLI(ctx context.Context, core *translate.Core, source, target, text string) error {
+	result, err := core.Translate(ctx, text, source, target)
 	if err != nil {
 		return err
 	}

@@ -36,8 +36,7 @@ func RunTranslate(cfg *config.Config, args []string) {
 
 	core, cleanup := setupRun(cfg, model)
 	defer cleanup()
-	ui := tui.NewCLIUI(from, to, text)
-	if err := ui.Run(context.Background(), core); err != nil {
+	if err := tui.RunCLI(context.Background(), core, from, to, text); err != nil {
 		Fatal(err)
 	}
 }

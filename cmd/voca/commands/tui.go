@@ -24,8 +24,7 @@ func RunTUI(cfg *config.Config, args []string) {
 	time.Sleep(800 * time.Millisecond) // let banner finish rendering before TUI takes over alternate screen
 	fmt.Printf("\n")
 
-	ui := tui.NewBubbleTeaUI()
-	if err := ui.Run(context.Background(), core); err != nil {
+	if err := tui.RunBubbleTea(context.Background(), core); err != nil {
 		fmt.Fprintf(os.Stderr, "  ✖ Error: %v\n", err)
 	}
 }
