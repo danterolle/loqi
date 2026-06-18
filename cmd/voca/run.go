@@ -56,8 +56,7 @@ func newCore(cfg *config.Config, model string) (*translate.Core, error) {
 	return translate.NewCore(backend, translate.NewStaticLanguages()), nil
 }
 
-func setupRun(cfg *config.Config) (*translate.Core, func()) {
-	model := cfg.Backend.Model
+func setupRun(cfg *config.Config, model string) (*translate.Core, func()) {
 	printBanner()
 	ollamaCmd, started := setupOllama(model)
 
@@ -113,7 +112,7 @@ func runTranslate(cfg *config.Config, args []string) {
 		os.Exit(1)
 	}
 
-	core, cleanup := setupRun(cfg)
+	core, cleanup := setupRun(cfg, model)
 	defer cleanup()
 	ui := tui.NewCLIUI(from, to, text)
 	if err := ui.Run(context.Background(), core); err != nil {
@@ -160,7 +159,7 @@ func runBatch(cfg *config.Config, args []string) {
 		os.Exit(1)
 	}
 
-	core, cleanup := setupRun(cfg)
+	core, cleanup := setupRun(cfg, model)
 	defer cleanup()
 	ctx := context.Background()
 
@@ -179,7 +178,7 @@ func runTUI(cfg *config.Config, args []string) {
 	fs.StringVar(&model, "model", model, "translation model")
 	fs.Parse(args)
 
-	core, cleanup := setupRun(cfg)
+	core, cleanup := setupRun(cfg, model)
 	defer cleanup()
 
 	fmt.Printf("\n  Starting terminal interface...")
