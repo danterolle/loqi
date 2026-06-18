@@ -19,7 +19,10 @@ func readInput(args []string) (string, error) {
 		}
 		return strings.Join(args, " "), nil
 	}
-	stat, _ := os.Stdin.Stat()
+	stat, err := os.Stdin.Stat()
+	if err != nil {
+		return "", nil
+	}
 	if (stat.Mode() & os.ModeCharDevice) == 0 {
 		data, err := io.ReadAll(os.Stdin)
 		if err != nil {
@@ -34,7 +37,10 @@ func readStdinOrFile(args []string) ([]byte, error) {
 	if len(args) > 0 {
 		return os.ReadFile(args[0])
 	}
-	stat, _ := os.Stdin.Stat()
+	stat, err := os.Stdin.Stat()
+	if err != nil {
+		return nil, fmt.Errorf("stdin not available: %w", err)
+	}
 	if (stat.Mode() & os.ModeCharDevice) != 0 {
 		return nil, fmt.Errorf("no input file specified and stdin is a terminal; pipe data or provide a file path")
 	}
