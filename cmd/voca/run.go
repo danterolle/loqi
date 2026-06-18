@@ -173,10 +173,11 @@ func runBatch(cfg *config.Config, args []string) {
 	fmt.Println()
 }
 
-func runTUI(cfg *config.Config) {
+func runTUI(cfg *config.Config, args []string) {
 	model := cfg.Backend.Model
-	flag.StringVar(&model, "model", model, "translation model")
-	flag.Parse()
+	fs := flag.NewFlagSet("tui", flag.ExitOnError)
+	fs.StringVar(&model, "model", model, "translation model")
+	fs.Parse(args)
 
 	core, cleanup := setupRun(cfg)
 	defer cleanup()

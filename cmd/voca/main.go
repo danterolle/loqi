@@ -36,7 +36,7 @@ func main() {
 			return
 		}
 	}
-	runTUI(cfg)
+	runTUI(cfg, os.Args[1:])
 }
 
 func extractConfig() string {
