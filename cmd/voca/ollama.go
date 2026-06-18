@@ -28,7 +28,7 @@ func setupOllama(model string) (*exec.Cmd, bool) {
 		if !ollama.WaitForReady(30) {
 			fmt.Fprintf(os.Stderr, "  ✖ timeout waiting for Ollama to start\n")
 			if cmd != nil {
-				cmd.Process.Kill()
+				_ = cmd.Process.Kill()
 			}
 			os.Exit(1)
 		}
@@ -40,7 +40,7 @@ func setupOllama(model string) (*exec.Cmd, bool) {
 		if err := ollama.PullModel(model); err != nil {
 			fmt.Fprintf(os.Stderr, "  ✖ Pull failed: %v\n", err)
 			if started && cmd != nil {
-				cmd.Process.Kill()
+				_ = cmd.Process.Kill()
 			}
 			os.Exit(1)
 		}
