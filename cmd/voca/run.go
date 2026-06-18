@@ -7,26 +7,40 @@ import (
 	"os"
 	"time"
 
+	"github.com/danterolle/voca/config"
 	"github.com/danterolle/voca/translate"
 	"github.com/danterolle/voca/translate/ollama"
 	"github.com/danterolle/voca/tui"
 )
 
-func newCore(model string) *translate.Core {
+func newCore(cfg *config.Config) *translate.Core {
 	prompt := translate.NewDefaultPrompt()
+	backend := ollama.NewBackend(cfg.Backend.BaseURL, cfg.Backend.Model, prompt)
+	if np, ok := cfg.Backend.Options["num_predict"]; ok {
+		switch v := np.(type) {
+		case int:
+			backend.NumPredict = v
+		case float64:
+			backend.NumPredict = int(v)
+		}
+	}
 	return translate.NewCore(
-		ollama.NewBackend("http://localhost:11434", model, prompt),
+		backend,
 		prompt,
 		translate.NewStaticLanguages(),
-		model,
+		cfg.Backend.Model,
 	)
 }
 
-func runTranslate(args []string) {
+func runTranslate(cfg *config.Config, args []string) {
+	model := cfg.Backend.Model
+	from := "auto"
+	to := "en"
+
 	fs := flag.NewFlagSet("translate", flag.ExitOnError)
-	from := fs.String("from", "auto", "source language code")
-	to := fs.String("to", "en", "target language code")
-	model := fs.String("model", translate.DefaultModel, "Ollama model")
+	fs.StringVar(&model, "model", model, "translation model")
+	fs.StringVar(&from, "from", from, "source language code")
+	fs.StringVar(&to, "to", to, "target language code")
 	h := fs.Bool("h", false, "show help")
 	help := fs.Bool("help", false, "show help")
 	fs.Parse(args)
@@ -55,24 +69,28 @@ func runTranslate(args []string) {
 	}
 
 	printBanner()
-	ollamaCmd, started := setupOllama(*model)
+	ollamaCmd, started := setupOllama(model)
 	if started && ollamaCmd != nil {
 		defer ollamaCmd.Process.Kill()
 	}
 
-	core := newCore(*model)
-	ui := tui.NewCLIUI(*from, *to, text)
+	core := newCore(cfg)
+	ui := tui.NewCLIUI(from, to, text)
 	if err := ui.Run(context.Background(), core); err != nil {
 		fmt.Fprintf(os.Stderr, "  ✖ Error: %v\n", err)
 		os.Exit(1)
 	}
 }
 
-func runBatch(args []string) {
+func runBatch(cfg *config.Config, args []string) {
+	model := cfg.Backend.Model
+	from := "auto"
+	to := "en"
+
 	fs := flag.NewFlagSet("batch", flag.ExitOnError)
-	from := fs.String("from", "auto", "source language code")
-	to := fs.String("to", "en", "target language code")
-	model := fs.String("model", translate.DefaultModel, "Ollama model")
+	fs.StringVar(&model, "model", model, "translation model")
+	fs.StringVar(&from, "from", from, "source language code")
+	fs.StringVar(&to, "to", to, "target language code")
 	h := fs.Bool("h", false, "show help")
 	help := fs.Bool("help", false, "show help")
 	fs.Parse(args)
@@ -103,14 +121,14 @@ func runBatch(args []string) {
 		os.Exit(1)
 	}
 
-	ollamaCmd, started := setupOllama(*model)
+	ollamaCmd, started := setupOllama(model)
 	if started && ollamaCmd != nil {
 		defer ollamaCmd.Process.Kill()
 	}
-	core := newCore(*model)
+	core := newCore(cfg)
 	ctx := context.Background()
 
-	output, err := translate.Batch(ctx, core, input, *from, *to)
+	output, err := translate.Batch(ctx, core, input, from, to)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "  ✖ Error: %v\n", err)
 		os.Exit(1)
@@ -120,12 +138,13 @@ func runBatch(args []string) {
 	fmt.Println()
 }
 
-func runTUI() {
-	model := flag.String("model", translate.DefaultModel, "Ollama model to use for translation")
+func runTUI(cfg *config.Config) {
+	model := cfg.Backend.Model
+	flag.StringVar(&model, "model", model, "translation model")
 	flag.Parse()
 
 	printBanner()
-	ollamaCmd, started := setupOllama(*model)
+	ollamaCmd, started := setupOllama(model)
 	if started && ollamaCmd != nil {
 		defer ollamaCmd.Process.Kill()
 	}
@@ -134,9 +153,9 @@ func runTUI() {
 	time.Sleep(800 * time.Millisecond)
 	fmt.Printf("\n")
 
-	core := newCore(*model)
+	root := newCore(cfg)
 	ui := tui.NewBubbleTeaUI()
-	if err := ui.Run(context.Background(), core); err != nil {
+	if err := ui.Run(context.Background(), root); err != nil {
 		fmt.Fprintf(os.Stderr, "  ✖ Error: %v\n", err)
 	}
 }
