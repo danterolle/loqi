@@ -9,9 +9,12 @@ import (
 	"time"
 )
 
+const apiBase = "http://localhost:11434"
+
+var httpClient = &http.Client{Timeout: 2 * time.Second}
+
 func Reachable() bool {
-	client := http.Client{Timeout: 2 * time.Second}
-	resp, err := client.Get("http://localhost:11434/api/tags")
+	resp, err := httpClient.Get(apiBase + "/api/tags")
 	if err != nil {
 		return false
 	}
@@ -30,7 +33,7 @@ func WaitForReady(seconds int) bool {
 }
 
 func ModelExists(model string) bool {
-	resp, err := http.Get("http://localhost:11434/api/tags")
+	resp, err := httpClient.Get(apiBase + "/api/tags")
 	if err != nil {
 		return false
 	}
@@ -58,7 +61,7 @@ func PullModel(model string) error {
 		return fmt.Errorf("ollama pull: encode body: %w", err)
 	}
 
-	resp, err := http.Post("http://localhost:11434/api/pull", "application/json", strings.NewReader(buf.String()))
+	resp, err := httpClient.Post(apiBase+"/api/pull", "application/json", strings.NewReader(buf.String()))
 	if err != nil {
 		return fmt.Errorf("ollama pull: %w", err)
 	}
