@@ -5,44 +5,44 @@ import (
 	"testing"
 )
 
-func TestDefault_BackendType(t *testing.T) {
+func TestDefaults(t *testing.T) {
 	cfg := Default()
-	if cfg.Backend.Type != "ollama" {
-		t.Fatalf("expected ollama, got %s", cfg.Backend.Type)
-	}
-}
 
-func TestDefault_BackendModel(t *testing.T) {
-	cfg := Default()
-	if cfg.Backend.Model != DefaultModel {
-		t.Fatalf("expected %s, got %s", DefaultModel, cfg.Backend.Model)
-	}
-}
+	t.Run("backend type", func(t *testing.T) {
+		if cfg.Backend.Type != "ollama" {
+			t.Fatalf("expected ollama, got %s", cfg.Backend.Type)
+		}
+	})
 
-func TestDefault_BackendBaseURL(t *testing.T) {
-	cfg := Default()
-	if cfg.Backend.BaseURL != DefaultBaseURL {
-		t.Fatalf("expected %s, got %s", DefaultBaseURL, cfg.Backend.BaseURL)
-	}
-}
+	t.Run("model", func(t *testing.T) {
+		if cfg.Backend.Model != DefaultModel {
+			t.Fatalf("expected %s, got %s", DefaultModel, cfg.Backend.Model)
+		}
+	})
 
-func TestDefault_BackendOptions(t *testing.T) {
-	cfg := Default()
-	if cfg.Backend.Options == nil {
-		t.Fatal("options should not be nil")
-	}
-	if cfg.Backend.Options["num_predict"] != float64(2048) {
-		t.Fatalf("expected num_predict 2048, got %v", cfg.Backend.Options["num_predict"])
-	}
-	if cfg.Backend.Options["timeout"] != float64(120) {
-		t.Fatalf("expected timeout 120, got %v", cfg.Backend.Options["timeout"])
-	}
-	if cfg.Backend.Options["temperature"] != float64(0) {
-		t.Fatalf("expected temperature 0, got %v", cfg.Backend.Options["temperature"])
-	}
-	if cfg.Backend.Options["top_p"] != float64(1) {
-		t.Fatalf("expected top_p 1, got %v", cfg.Backend.Options["top_p"])
-	}
+	t.Run("base URL", func(t *testing.T) {
+		if cfg.Backend.BaseURL != DefaultBaseURL {
+			t.Fatalf("expected %s, got %s", DefaultBaseURL, cfg.Backend.BaseURL)
+		}
+	})
+
+	t.Run("options", func(t *testing.T) {
+		if cfg.Backend.Options == nil {
+			t.Fatal("options should not be nil")
+		}
+		if cfg.Backend.Options["num_predict"] != float64(2048) {
+			t.Fatalf("expected num_predict 2048, got %v", cfg.Backend.Options["num_predict"])
+		}
+		if cfg.Backend.Options["timeout"] != float64(120) {
+			t.Fatalf("expected timeout 120, got %v", cfg.Backend.Options["timeout"])
+		}
+		if cfg.Backend.Options["temperature"] != float64(0) {
+			t.Fatalf("expected temperature 0, got %v", cfg.Backend.Options["temperature"])
+		}
+		if cfg.Backend.Options["top_p"] != float64(1) {
+			t.Fatalf("expected top_p 1, got %v", cfg.Backend.Options["top_p"])
+		}
+	})
 }
 
 func TestLoad_FileNotFound(t *testing.T) {
