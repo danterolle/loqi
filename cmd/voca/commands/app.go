@@ -75,20 +75,6 @@ func parseTranslateFlags(name string, args []string, defaultModel string) (model
 	return
 }
 
-func readFloat64Option(opts map[string]any, key string) (float64, bool) {
-	v, ok := opts[key]
-	if !ok {
-		return 0, false
-	}
-	switch n := v.(type) {
-	case float64:
-		return n, true
-	case int:
-		return float64(n), true
-	}
-	return 0, false
-}
-
 func newCore(cfg *config.Config, model string) (*translate.Core, error) {
 	prompt := translate.NewDefaultPrompt()
 
@@ -100,16 +86,30 @@ func newCore(cfg *config.Config, model string) (*translate.Core, error) {
 		return nil, fmt.Errorf("unsupported backend type: %q", cfg.Backend.Type)
 	}
 
-	if np, ok := readFloat64Option(cfg.Backend.Options, "num_predict"); ok {
+	readFloat := func(key string) (float64, bool) {
+		v, ok := cfg.Backend.Options[key]
+		if !ok {
+			return 0, false
+		}
+		switch n := v.(type) {
+		case float64:
+			return n, true
+		case int:
+			return float64(n), true
+		}
+		return 0, false
+	}
+
+	if np, ok := readFloat("num_predict"); ok {
 		backend.NumPredict = int(np)
 	}
-	if to, ok := readFloat64Option(cfg.Backend.Options, "timeout"); ok {
+	if to, ok := readFloat("timeout"); ok {
 		backend.Client.Timeout = time.Duration(to) * time.Second
 	}
-	if t, ok := readFloat64Option(cfg.Backend.Options, "temperature"); ok {
+	if t, ok := readFloat("temperature"); ok {
 		backend.Temperature = t
 	}
-	if p, ok := readFloat64Option(cfg.Backend.Options, "top_p"); ok {
+	if p, ok := readFloat("top_p"); ok {
 		backend.TopP = p
 	}
 	return translate.NewCore(backend, translate.NewStaticLanguages()), nil
