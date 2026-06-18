@@ -16,6 +16,8 @@ func readInput(args []string) (string, error) {
 				return "", fmt.Errorf("reading file %q: %w", path, err)
 			}
 			return strings.TrimSpace(string(data)), nil
+		} else if err != nil && looksLikeFilePath(path) {
+			return "", fmt.Errorf("file not found: %q", path)
 		}
 		return strings.Join(args, " "), nil
 	}
@@ -45,4 +47,16 @@ func readStdinOrFile(args []string) ([]byte, error) {
 		return nil, fmt.Errorf("no input file specified and stdin is a terminal; pipe data or provide a file path")
 	}
 	return io.ReadAll(os.Stdin)
+}
+
+func looksLikeFilePath(path string) bool {
+	for i := len(path) - 1; i >= 0; i-- {
+		switch path[i] {
+		case '/', '\\':
+			return false
+		case '.':
+			return i > 0 && i < len(path)-1
+		}
+	}
+	return false
 }
