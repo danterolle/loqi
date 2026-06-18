@@ -32,19 +32,23 @@ type chatResponse struct {
 const DefaultNumPredict = 2048
 
 type Backend struct {
-	BaseURL    string
-	Model      string
-	Prompt     translate.PromptBuilder
-	Client     *http.Client
-	NumPredict int
+	BaseURL     string
+	Model       string
+	Prompt      translate.PromptBuilder
+	Client      *http.Client
+	NumPredict  int
+	Temperature float64
+	TopP        float64
 }
 
 func NewBackend(baseURL, model string, prompt translate.PromptBuilder) *Backend {
 	return &Backend{
-		BaseURL:    baseURL,
-		Model:      model,
-		Prompt:     prompt,
-		NumPredict: DefaultNumPredict,
+		BaseURL:     baseURL,
+		Model:       model,
+		Prompt:      prompt,
+		NumPredict:  DefaultNumPredict,
+		Temperature: 0.0,
+		TopP:        1.0,
 		Client: &http.Client{
 			Timeout: 2 * time.Minute,
 		},
@@ -60,8 +64,8 @@ func (b *Backend) Translate(ctx context.Context, text, source, target string) (s
 	}
 
 	options := map[string]any{
-		"temperature": 0.0,
-		"top_p":       1.0,
+		"temperature": b.Temperature,
+		"top_p":       b.TopP,
 	}
 	if b.NumPredict > 0 {
 		options["num_predict"] = b.NumPredict

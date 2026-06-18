@@ -13,6 +13,20 @@ import (
 	"github.com/danterolle/voca/tui"
 )
 
+func readFloat64Option(opts map[string]any, key string) (float64, bool) {
+	v, ok := opts[key]
+	if !ok {
+		return 0, false
+	}
+	switch n := v.(type) {
+	case float64:
+		return n, true
+	case int:
+		return float64(n), true
+	}
+	return 0, false
+}
+
 func newCore(cfg *config.Config, model string) (*translate.Core, error) {
 	prompt := translate.NewDefaultPrompt()
 
@@ -24,21 +38,17 @@ func newCore(cfg *config.Config, model string) (*translate.Core, error) {
 		return nil, fmt.Errorf("unsupported backend type: %q", cfg.Backend.Type)
 	}
 
-	if np, ok := cfg.Backend.Options["num_predict"]; ok {
-		switch v := np.(type) {
-		case int:
-			backend.NumPredict = v
-		case float64:
-			backend.NumPredict = int(v)
-		}
+	if np, ok := readFloat64Option(cfg.Backend.Options, "num_predict"); ok {
+		backend.NumPredict = int(np)
 	}
-	if to, ok := cfg.Backend.Options["timeout"]; ok {
-		switch v := to.(type) {
-		case int:
-			backend.Client.Timeout = time.Duration(v) * time.Second
-		case float64:
-			backend.Client.Timeout = time.Duration(v) * time.Second
-		}
+	if to, ok := readFloat64Option(cfg.Backend.Options, "timeout"); ok {
+		backend.Client.Timeout = time.Duration(to) * time.Second
+	}
+	if t, ok := readFloat64Option(cfg.Backend.Options, "temperature"); ok {
+		backend.Temperature = t
+	}
+	if p, ok := readFloat64Option(cfg.Backend.Options, "top_p"); ok {
+		backend.TopP = p
 	}
 	return translate.NewCore(backend, translate.NewStaticLanguages()), nil
 }

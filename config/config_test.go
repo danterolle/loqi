@@ -37,6 +37,12 @@ func TestDefault_BackendOptions(t *testing.T) {
 	if cfg.Backend.Options["timeout"] != float64(120) {
 		t.Fatalf("expected timeout 120, got %v", cfg.Backend.Options["timeout"])
 	}
+	if cfg.Backend.Options["temperature"] != float64(0) {
+		t.Fatalf("expected temperature 0, got %v", cfg.Backend.Options["temperature"])
+	}
+	if cfg.Backend.Options["top_p"] != float64(1) {
+		t.Fatalf("expected top_p 1, got %v", cfg.Backend.Options["top_p"])
+	}
 }
 
 func TestLoad_FileNotFound(t *testing.T) {
