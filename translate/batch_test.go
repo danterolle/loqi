@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"testing"
 )
 
@@ -32,6 +33,47 @@ func assertJSONResult(t *testing.T, got []byte, want any) {
 	wantStr, _ := json.Marshal(wantVal)
 	if string(gotStr) != string(wantStr) {
 		t.Fatalf("expected:\n%s\n\ngot:\n%s", string(wantJSON), string(got))
+	}
+}
+
+func TestBatch_FromFixture(t *testing.T) {
+	core := NewCore(NewMockBackend(), NewDefaultPrompt(), NewStaticLanguages(), "test")
+	input, err := os.ReadFile("../test_data/i18n.json")
+	if err != nil {
+		t.Fatalf("failed to read fixture: %v", err)
+	}
+	result, err := Batch(context.Background(), core, input, "en", "it")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	var got any
+	if err := json.Unmarshal(result, &got); err != nil {
+		t.Fatalf("invalid JSON result: %v", err)
+	}
+	// Verify flat: all string leaf values were translated
+	m := got.(map[string]any)
+	app := m["app"].(map[string]any)
+	if app["title"] != "[en->it] Welcome to Voca" {
+		t.Fatalf("expected translated title, got %q", app["title"])
+	}
+	// Verify non-string leaf values preserved
+	settings := m["settings"].(map[string]any)
+	if settings["notifications"] != true {
+		t.Fatal("non-string field 'notifications' should be preserved")
+	}
+	if settings["items_per_page"] != float64(25) {
+		t.Fatal("non-string field 'items_per_page' should be preserved")
+	}
+	// Verify long sentences translated
+	errors := m["errors"].(map[string]any)
+	if errors["not_found"] != "[en->it] The requested resource could not be found on this server. Please check the URL and try again." {
+		t.Fatalf("unexpected long translation, got %q", errors["not_found"])
+	}
+	// Verify nested structure preserved
+	menu := m["menu"].(map[string]any)
+	file := menu["file"].(map[string]any)
+	if file["save"] != "[en->it] Save" {
+		t.Fatalf("expected translated 'Save', got %q", file["save"])
 	}
 }
 

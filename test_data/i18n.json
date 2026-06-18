@@ -1,0 +1,43 @@
+{
+  "app": {
+    "title": "Welcome to Voca",
+    "description": "A local-first translation tool powered by LLMs"
+  },
+  "menu": {
+    "file": {
+      "save": "Save",
+      "open": "Open",
+      "quit": "Quit"
+    },
+    "edit": {
+      "undo": "Undo",
+      "redo": "Redo",
+      "copy": "Copy",
+      "paste": "Paste"
+    }
+  },
+  "messages": {
+    "greeting": "Hello, {name}!",
+    "confirm_delete": "Are you sure you want to delete this item?",
+    "loading": "Loading..."
+  },
+  "settings": {
+    "theme": "Theme",
+    "language": "Language",
+    "notifications": true,
+    "items_per_page": 25
+  },
+  "errors": {
+    "not_found": "The requested resource could not be found on this server. Please check the URL and try again.",
+    "timeout": "The operation timed out after 30 seconds. This might be due to network congestion or a temporary server issue.",
+    "validation": "One or more fields contain invalid data. Please review your input and correct any mistakes before submitting.",
+    "permission": "You do not have the required permissions to access this resource. Contact your administrator if you believe this is an error."
+  },
+  "email": {
+    "welcome_subject": "Welcome to our platform — let's get started!",
+    "welcome_body": "Thank you for creating an account. We are excited to have you on board. To get the most out of our service, we recommend completing your profile and exploring the getting started guide.",
+    "reset_subject": "Password reset request received for your account",
+    "reset_body": "We received a request to reset the password associated with your account. If you did not make this request, you can safely ignore this email. The reset link will expire in 24 hours.",
+    "notification_subject": "You have unread notifications waiting for you"
+  }
+}
