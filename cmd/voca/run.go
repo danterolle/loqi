@@ -13,6 +13,9 @@ import (
 	"github.com/danterolle/voca/tui"
 )
 
+const defaultFrom = "auto"
+const defaultTo = "en"
+
 func readFloat64Option(opts map[string]any, key string) (float64, bool) {
 	v, ok := opts[key]
 	if !ok {
@@ -78,8 +81,8 @@ func setupRun(cfg *config.Config) (*translate.Core, func()) {
 
 func runTranslate(cfg *config.Config, args []string) {
 	model := cfg.Backend.Model
-	from := "auto"
-	to := "en"
+	from := defaultFrom
+	to := defaultTo
 
 	fs := flag.NewFlagSet("translate", flag.ExitOnError)
 	fs.StringVar(&model, "model", model, "translation model")
@@ -123,8 +126,8 @@ func runTranslate(cfg *config.Config, args []string) {
 
 func runBatch(cfg *config.Config, args []string) {
 	model := cfg.Backend.Model
-	from := "auto"
-	to := "en"
+	from := defaultFrom
+	to := defaultTo
 
 	fs := flag.NewFlagSet("batch", flag.ExitOnError)
 	fs.StringVar(&model, "model", model, "translation model")

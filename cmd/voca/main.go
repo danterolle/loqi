@@ -68,8 +68,8 @@ func printUsage() {
 	cfg := config.Default()
 	fmt.Println("Configurable flags (translate/batch):")
 	fs := flag.NewFlagSet("translate", flag.ExitOnError)
-	fs.String("from", "auto", "source language code")
-	fs.String("to", "en", "target language code")
+	fs.String("from", defaultFrom, "source language code")
+	fs.String("to", defaultTo, "target language code")
 	fs.String("model", cfg.Backend.Model, "translation model")
 	fs.PrintDefaults()
 }
