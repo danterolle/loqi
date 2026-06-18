@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="VOCA (Versatile Offline Communication Assistant) — Local-first translation tool for desktop and developer workflows. Translate text, files, docs and JSON using local LLMs.">
+    <title>VOCA — Versatile Offline Communication Assistant</title>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        html,
+        body {
+            max-width: 100%;
+            overflow-x: hidden;
+            width: 100vw;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            font-size: 16px
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            background: #0d1117;
+            color: #e6edf3;
+            line-height: 1.6
+        }
+
+        :root {
+            --bg: #0d1117;
+            --sur: #161b22;
+            --sur2: #1c2128;
+            --bdr: #30363d;
+            --txt: #e6edf3;
+            --mut: #8b949e;
+            --acc: #ff5f5f;
+            --acc2: #ffaf5f;
+            --r: 8px
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none
+        }
+
+        /* --- NAV & HEADER --- */
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(13, 17, 23, .94);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--bdr);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            height: 54px
+        }
+
+        .logo {
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--acc);
+            letter-spacing: .12em
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+            list-style: none;
+            align-items: center
+        }
+
+        .nav-links a {
+            color: var(--mut);
+            font-size: .85rem;
+            transition: color .15s
+        }
+
+        .nav-links a:hover {
+            color: var(--txt)
+        }
+
+        /* CSS-Only Hamburger Menu Elements */
+        .menu-toggle {
+            display: none;
+        }
+
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            padding: 5px;
+            z-index: 101;
+        }
+
+        .hamburger span {
+            width: 22px;
+            height: 2px;
+            background: var(--txt);
+            border-radius: 2px;
+            transition: transform 0.3s, opacity 0.3s;
+        }
+
+        /* --- BUTTONS --- */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .4rem;
+            padding: .4rem .95rem;
+            border-radius: var(--r);
+            font-size: .85rem;
+            font-weight: 500;
+            transition: all .15s;
+            cursor: pointer;
+            border: 1px solid transparent
+        }
+
+        .btn-primary {
+            background: var(--acc);
+            color: #fff;
+            font-weight: 600;
+            border-color: var(--acc)
+        }
+
+        .btn-primary:hover {
+            background: #ff7a7a;
+            border-color: #ff7a7a
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--txt);
+            border: 1px solid var(--bdr)
+        }
+
+        .btn-ghost:hover {
+            border-color: var(--mut);
+            background: var(--sur)
+        }
+
+        /* --- HERO --- */
+        .hero {
+            text-align: center;
+            padding: 5.5rem 2rem 4.5rem;
+            max-width: 860px;
+            margin: 0 auto
+        }
+
+        .hero-banner-container {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: auto;
+            margin-bottom: 1.5rem;
+            scrollbar-width: none
+        }
+
+        .hero-banner-container::-webkit-scrollbar {
+            display: none
+        }
+
+        .hero-banner {
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: clamp(0.38rem, 2.2vw, 0.9rem);
+            line-height: 1.15;
+            display: inline-block;
+            text-align: left;
+            white-space: pre;
+            background: transparent;
+            border: none;
+            padding: 0 1rem;
+            font-weight: bold
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            background: var(--sur);
+            border: 1px solid var(--bdr);
+            border-radius: 100px;
+            padding: .28rem .8rem;
+            font-size: .72rem;
+            color: var(--mut);
+            margin-bottom: 1.4rem;
+            font-family: monospace
+        }
+
+        .badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--acc)
+        }
+
+        h1 {
+            font-size: clamp(1.8rem, 4.5vw, 3.25rem);
+            font-weight: 800;
+            line-height: 1.15;
+            letter-spacing: -.02em;
+            margin-bottom: 1.1rem
+        }
+
+        h1 em {
+            color: var(--acc);
+            font-style: normal
+        }
+
+        .hero-sub {
+            font-size: 1.05rem;
+            color: var(--mut);
+            max-width: 620px;
+            margin: 0 auto 2.4rem;
+            padding: 0 0.5rem
+        }
+
+        .hero-sub strong {
+            color: var(--txt)
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: .7rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 2.5rem
+        }
+
+        .install-cmd {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--sur);
+            border: 1px solid var(--bdr);
+            border-radius: var(--r);
+            padding: .7rem 1.1rem;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: .82rem;
+            color: var(--txt);
+            max-width: 420px;
+            width: 100%;
+            margin: 0 auto;
+            gap: 1rem
+        }
+
+        .pfx {
+            color: var(--acc)
+        }
+
+        .copy-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--mut);
+            padding: .15rem;
+            border-radius: 4px;
+            transition: color .15s;
+            flex-shrink: 0;
+            display: flex
+        }
+
+        .copy-btn:hover {
+            color: var(--txt)
+        }
+
+        /* --- SECTIONS --- */
+        section {
+            padding: 4.5rem 2rem
+        }
+
+        .container {
+            max-width: 980px;
+            margin: 0 auto
+        }
+
+        .sec-label {
+            font-size: .7rem;
+            font-weight: 600;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: var(--acc);
+            margin-bottom: .65rem
+        }
+
+        h2 {
+            font-size: clamp(1.5rem, 2.8vw, 2rem);
+            font-weight: 700;
+            letter-spacing: -.01em;
+            margin-bottom: .85rem
+        }
+
+        .sec-sub {
+            color: var(--mut);
+            font-size: .95rem;
+            max-width: 520px;
+            margin-bottom: 2.6rem
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+            gap: 1.15rem
+        }
+
+        .card {
+            background: var(--sur);
+            border: 1px solid var(--bdr);
+            border-radius: var(--r);
+            padding: 1.4rem;
+            transition: border-color .15s
+        }
+
+        .card:hover {
+            border-color: var(--acc)
+        }
+
+        .card-icon {
+            font-size: 1.3rem;
+            margin-bottom: .65rem
+        }
+
+        .card h3 {
+            font-size: .95rem;
+            font-weight: 600;
+            margin-bottom: .4rem
+        }
+
+        .card p {
+            font-size: .84rem;
+            color: var(--mut)
+        }
+
+        /* --- CODE BLOCKS & TABLES --- */
+        .code-block {
+            background: var(--sur);
+            border: 1px solid var(--bdr);
+            border-radius: var(--r);
+            overflow: hidden;
+            max-width: 100%
+        }
+
+        .code-hdr {
+            display: flex;
+            align-items: center;
+            padding: .5rem 1rem;
+            border-bottom: 1px solid var(--bdr);
+            background: var(--sur2);
+            font-size: .72rem;
+            color: var(--mut);
+            font-family: monospace
+        }
+
+        .code-body {
+            padding: 1.1rem;
+            overflow-x: auto
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            width: 100%
+        }
+
+        pre {
+            font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+            font-size: .8rem;
+            line-height: 1.75;
+            color: var(--txt)
+        }
+
+        .cm {
+            color: #6e7681
+        }
+
+        .cp {
+            color: var(--acc)
+        }
+
+        .fl {
+            color: #79c0ff
+        }
+
+        .sv {
+            color: #a5d6ff
+        }
+
+        .yk {
+            color: var(--acc2)
+        }
+
+        .yv {
+            color: #a5d6ff
+        }
+
+        .yn {
+            color: #f2cc60
+        }
+
+        /* --- TABS --- */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--bdr);
+            margin-bottom: 1.4rem;
+            overflow-x: auto;
+            scrollbar-width: none
+        }
+
+        .tabs::-webkit-scrollbar {
+            display: none
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: var(--mut);
+            padding: .55rem 1.1rem;
+            cursor: pointer;
+            font-size: .85rem;
+            font-weight: 500;
+            transition: all .15s;
+            margin-bottom: -1px;
+            white-space: nowrap
+        }
+
+        .tab-btn.active {
+            color: var(--txt);
+            border-bottom-color: var(--acc)
+        }
+
+        .tab-btn:hover:not(.active) {
+            color: var(--txt)
+        }
+
+        .tab-panel {
+            display: none
+        }
+
+        .tab-panel.active {
+            display: block
+        }
+
+        /* --- MISC --- */
+        .cols2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem
+        }
+
+        .kbd-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: .82rem;
+            min-width: 240px
+        }
+
+        .kbd-table th {
+            text-align: left;
+            padding: .45rem 1rem;
+            background: var(--sur2);
+            color: var(--mut);
+            font-weight: 500;
+            border-bottom: 1px solid var(--bdr);
+            font-size: .7rem;
+            text-transform: uppercase;
+            letter-spacing: .05em
+        }
+
+        .kbd-table td {
+            padding: .5rem 1rem;
+            border-bottom: 1px solid var(--bdr);
+            color: var(--txt)
+        }
+
+        .kbd-table tr:last-child td {
+            border-bottom: none
+        }
+
+        kbd {
+            display: inline-flex;
+            align-items: center;
+            background: var(--sur2);
+            border: 1px solid var(--bdr);
+            border-radius: 4px;
+            padding: .1em .4em;
+            font-family: monospace;
+            font-size: .78em;
+            color: var(--txt);
+            white-space: nowrap
+        }
+
+        hr.div {
+            border: none;
+            border-top: 1px solid var(--bdr)
+        }
+
+        .priority-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: .6rem
+        }
+
+        .priority-list li {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            font-size: .875rem
+        }
+
+        .num {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .72rem;
+            font-weight: 700;
+            flex-shrink: 0
+        }
+
+        .num-acc {
+            background: var(--acc);
+            color: #fff
+        }
+
+        .num-dim {
+            background: var(--sur2);
+            color: var(--txt);
+            border: 1px solid var(--bdr)
+        }
+
+        code {
+            font-family: monospace;
+            font-size: .875rem;
+            color: var(--txt)
+        }
+
+        footer {
+            background: var(--sur);
+            border-top: 1px solid var(--bdr);
+            padding: 2.25rem 2rem;
+            text-align: center
+        }
+
+        .foot-logo {
+            font-family: monospace;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--acc);
+            margin-bottom: .6rem
+        }
+
+        .foot-links {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: .65rem 0
+        }
+
+        .foot-links a {
+            color: var(--mut);
+            font-size: .85rem;
+            transition: color .15s
+        }
+
+        .foot-links a:hover {
+            color: var(--txt)
+        }
+
+        .foot-muted {
+            color: var(--mut);
+            font-size: .75rem;
+            margin-top: .9rem
+        }
+
+        @media(max-width:768px) {
+            .cols2 {
+                grid-template-columns: 1fr;
+                gap: 2rem
+            }
+        }
+
+        @media(max-width:640px) {
+            nav {
+                padding: 0 1.25rem
+            }
+
+            .hamburger {
+                display: flex;
+            }
+
+            .nav-links {
+                position: absolute;
+                top: 54px;
+                left: 0;
+                width: 100%;
+                background: var(--bg);
+                border-bottom: 1px solid var(--bdr);
+                flex-direction: column;
+                padding: 0;
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.3s ease-out;
+            }
+
+            .nav-links li {
+                width: 100%;
+                text-align: center;
+            }
+
+            .nav-links a,
+            .nav-links button {
+                display: block;
+                width: 100%;
+                padding: 1.2rem;
+                border-radius: 0;
+            }
+
+            .menu-toggle:checked~.nav-links {
+                max-height: 400px;
+            }
+
+            .menu-toggle:checked~.hamburger span:nth-child(1) {
+                transform: translateY(7px) rotate(45deg);
+            }
+
+            .menu-toggle:checked~.hamburger span:nth-child(2) {
+                opacity: 0;
+            }
+
+            .menu-toggle:checked~.hamburger span:nth-child(3) {
+                transform: translateY(-7px) rotate(-45deg);
+            }
+
+            section {
+                padding: 3.5rem 1rem
+            }
+
+            .hero {
+                padding: 2.5rem 1rem 3rem
+            }
+
+            .install-cmd {
+                flex-direction: column;
+                gap: 0.8rem;
+                align-items: stretch;
+                text-align: center;
+                padding: 1rem;
+            }
+
+            .install-cmd span {
+                overflow-wrap: break-word;
+                word-break: break-word;
+            }
+
+            .copy-btn {
+                align-self: stretch;
+                justify-content: center;
+                padding: 0.6rem;
+                background: var(--sur2);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <span class="logo">VOCA</span>
+
+        <input type="checkbox" id="menu-toggle" class="menu-toggle">
+        <label for="menu-toggle" class="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+        </label>
+
+        <ul class="nav-links">
+            <li><a href="#why" onclick="document.getElementById('menu-toggle').checked=false">Why VOCA</a></li>
+            <li><a href="#modes" onclick="document.getElementById('menu-toggle').checked=false">Usage</a></li>
+            <li><a href="#config" onclick="document.getElementById('menu-toggle').checked=false">Config</a></li>
+            <li><a href="#install" onclick="document.getElementById('menu-toggle').checked=false">Install</a></li>
+            <li>
+                <a href="https://github.com/danterolle/voca" target="_blank" rel="noopener">
+                    <button class="btn btn-ghost">
+                        <svg height="14" width="14" viewBox="0 0 16 16" fill="currentColor">
+                            <path
+                                d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+                        </svg>
+                        GitHub
+                    </button>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <section class="hero">
+        <div class="badge"><span class="badge-dot"></span>v0.4.5 · License: Apache 2.0</div>
+
+        <div class="hero-banner-container">
+            <pre class="hero-banner">
+<span style="color:#ffffff">  ██╗   ██╗ ██████╗  ██████╗ █████╗ </span>
+<span style="color:#ffffd7">  ██║   ██║██╔═══██╗██╔════╝██╔══██╗</span>
+<span style="color:#ffffaf">  ██║   ██║██║   ██║██║     ███████║</span>
+<span style="color:#ffd75f">  ╚██╗ ██╔╝██║   ██║██║     ██╔══██║</span>
+<span style="color:#ffaf5f">   ╚████╔╝ ╚██████╔╝╚██████╗██║  ██║</span>
+<span style="color:#ff5f5f">    ╚═══╝   ╚═════╝  ╚═════╝╚═╝  ╚═╝</span></pre>
+        </div>
+
+        <h1>Translation that stays<br><em>on your machine.</em></h1>
+        <p class="hero-sub"><strong>voca</strong> is a local-first translation tool built for desktop and developer
+            workflows. Translate text, files, docs, and JSON using local LLMs with zero data leaving your machine.</p>
+        <div class="hero-actions">
+            <a href="#install"><button class="btn btn-primary">Get started</button></a>
+            <a href="https://github.com/danterolle/voca" target="_blank" rel="noopener">
+                <button class="btn btn-ghost">
+                    <svg height="14" width="14" viewBox="0 0 16 16" fill="currentColor">
+                        <path
+                            d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+                    </svg>
+                    View on GitHub
+                </button>
+            </a>
+        </div>
+        <div class="install-cmd">
+            <span><span class="pfx">$</span> go install github.com/danterolle/voca@latest</span>
+            <button class="copy-btn" onclick="doCopy(this)" title="Copy to clipboard">
+                <svg id="copy-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" />
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>
+            </button>
+        </div>
+    </section>
+
+    <hr class="div">
+
+    <section id="why">
+        <div class="container">
+            <p class="sec-label">Why VOCA</p>
+            <h2>No cloud or third-party provider. Just translate.</h2>
+            <p class="sec-sub">Built for people who work with text, docs and code without pasting sensitive content into
+                third-party services.</p>
+            <div class="cards">
+                <div class="card">
+                    <div class="card-icon">🔒</div>
+                    <h3>Private by design</h3>
+                    <p>Every translation runs entirely via Ollama on your machine. No data sent to Google, DeepL or
+                        anyone else.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">⚡</div>
+                    <h3>Scriptable & pipeable</h3>
+                    <p>Works in shell scripts and pipelines. Pipe stdin, redirect stdout, integrate into CI or build
+                        tools.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">📦</div>
+                    <h3>Structured content</h3>
+                    <p>Batch-translate JSON locale files preserving structure or entire markdown and plain text files in
+                        one pass.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">🖥️</div>
+                    <h3>TUI & CLI</h3>
+                    <p>Interactive terminal UI with live auto-translate or one-shot commands directly from your shell.
+                    </p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">⚙️</div>
+                    <h3>Configurable</h3>
+                    <p>Flexible settings resolved dynamically from YAML config, environment variables, or CLI flags.
+                        Check ~/.config/voca/config.yaml</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">🤖</div>
+                    <h3>Model-agnostic</h3>
+                    <p>Use any LLM via Ollama: gemma, phi, qwen and more. Switch per-command or set a default in config.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr class="div">
+
+    <section id="modes">
+        <div class="container">
+            <p class="sec-label">Usage</p>
+            <h2>Three ways to translate</h2>
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab(event,'tui')">TUI</button>
+                <button class="tab-btn" onclick="switchTab(event,'cli')">CLI</button>
+                <button class="tab-btn" onclick="switchTab(event,'batch')">Batch</button>
+            </div>
+            <div id="tab-tui" class="tab-panel active">
+                <div class="cols2">
+                    <div>
+                        <p style="color:var(--mut);font-size:.88rem;margin-bottom:1rem">Interactive terminal UI with
+                            auto-translate as you type. Best for exploratory translation sessions.</p>
+                        <div class="code-block">
+                            <div class="code-hdr"><span>shell</span></div>
+                            <div class="code-body">
+                                <pre><span class="cp">$</span> voca</pre>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <p style="color:var(--mut);font-size:.82rem;margin-bottom:.7rem">Keyboard shortcuts</p>
+                        <div class="code-block">
+                            <div class="table-wrapper">
+                                <table class="kbd-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Key</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><kbd>Tab</kbd> / <kbd>Shift+Tab</kbd></td>
+                                            <td>Cycle focus</td>
+                                        </tr>
+                                        <tr>
+                                            <td><kbd>↑</kbd> <kbd>↓</kbd></td>
+                                            <td>Change language</td>
+                                        </tr>
+                                        <tr>
+                                            <td><kbd>Ctrl+Y</kbd></td>
+                                            <td>Copy to clipboard</td>
+                                        </tr>
+                                        <tr>
+                                            <td><kbd>Ctrl+L</kbd></td>
+                                            <td>Clear input/output</td>
+                                        </tr>
+                                        <tr>
+                                            <td><kbd>Ctrl+T</kbd></td>
+                                            <td>Swap languages</td>
+                                        </tr>
+                                        <tr>
+                                            <td><kbd>Ctrl+C</kbd> / <kbd>Esc</kbd></td>
+                                            <td>Quit</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="tab-cli" class="tab-panel">
+                <p style="color:var(--mut);font-size:.88rem;margin-bottom:1rem">One-shot translation from the command
+                    line. Supports strings, stdin and files.</p>
+                <div class="code-block">
+                    <div class="code-hdr"><span>shell</span></div>
+                    <div class="code-body">
+                        <pre><span class="cm"># Translate a string</span>
+<span class="cp">$</span> voca translate <span class="fl">--from</span> <span class="sv">en</span> <span class="fl">--to</span> <span class="sv">fr</span> <span class="sv">"Hello world"</span>
+
+<span class="cm"># Pipe from stdin</span>
+<span class="cp">$</span> echo <span class="sv">"Hello world"</span> | voca translate <span class="fl">--from</span> <span class="sv">en</span> <span class="fl">--to</span> <span class="sv">fr</span>
+
+<span class="cm"># Translate a file</span>
+<span class="cp">$</span> voca translate <span class="fl">--from</span> <span class="sv">auto</span> <span class="fl">--to</span> <span class="sv">en</span> ./document.md
+
+<span class="cm"># Choose a specific model</span>
+<span class="cp">$</span> voca translate <span class="fl">--model</span> <span class="sv">phi4-mini:latest</span> <span class="fl">--from</span> <span class="sv">fr</span> <span class="fl">--to</span> <span class="sv">en</span> <span class="sv">"Bonjour le monde"</span></pre>
+                    </div>
+                </div>
+            </div>
+            <div id="tab-batch" class="tab-panel">
+                <p style="color:var(--mut);font-size:.88rem;margin-bottom:1rem">Translate JSON or text files in one
+                    pass. Format is auto-detected: JSON preserves structure, only values are translated.</p>
+                <div class="code-block">
+                    <div class="code-hdr"><span>shell</span></div>
+                    <div class="code-body">
+                        <pre><span class="cm"># Translate all string values in a JSON file</span>
+<span class="cp">$</span> voca batch <span class="fl">--from</span> <span class="sv">en</span> <span class="fl">--to</span> <span class="sv">es</span> locales/en.json > locales/es.json
+
+<span class="cm"># Translate a markdown file</span>
+<span class="cp">$</span> voca batch <span class="fl">--from</span> <span class="sv">en</span> <span class="fl">--to</span> <span class="sv">fr</span> README.md
+
+<span class="cm"># Pipe JSON from stdin</span>
+<span class="cp">$</span> echo <span class="sv">'{"msg": "Hello"}'</span> | voca batch <span class="fl">--from</span> <span class="sv">en</span> <span class="fl">--to</span> <span class="sv">es</span></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr class="div">
+
+    <section id="config">
+        <div class="container">
+            <p class="sec-label">Configuration</p>
+            <h2>Quick Setup</h2>
+            <div class="cols2">
+                <div>
+                    <ul class="priority-list">
+                        <li><span class="num num-dim">A</span><code>--config &lt;path&gt;</code> flag</li>
+                        <li><span class="num num-dim">B</span><code>VOCA_CONFIG</code> environment variable</li>
+                        <li><span class="num num-dim">C</span><code>~/.config/voca/config.yaml</code> (default path)
+                        </li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="code-block">
+                        <div class="code-hdr"><span>~/.config/voca/config.yaml</span></div>
+                        <div class="code-body">
+                            <pre><span class="yk">backend</span>:
+  <span class="yk">model</span>: <span class="yv">gemma4:e2b-it-qat</span>
+  <span class="yk">base_url</span>: <span class="yv">http://localhost:11434</span>
+  <span class="yk">options</span>:
+    <span class="yk">temperature</span>: <span class="yn">0.0</span>
+    <span class="yk">num_predict</span>: <span class="yn">2048</span></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr class="div">
+
+    <section id="install">
+        <div class="container">
+            <p class="sec-label">Installation</p>
+            <h2>Up and running in seconds</h2>
+            <p class="sec-sub">Requires Go 1.26+ and <a href="https://ollama.com" target="_blank"
+                    style="color:var(--acc2)">Ollama</a> with at least one model pulled.</p>
+            <div class="cols2">
+                <div>
+                    <h3 style="margin-bottom:.7rem;font-size:.95rem;font-weight:600">Via go install</h3>
+                    <div class="code-block">
+                        <div class="code-hdr"><span>shell</span></div>
+                        <div class="code-body">
+                            <pre><span class="cm"># Pull a model first or let voca download a model</span>
+<span class="cp">$</span> ollama pull gemma3:1b
+
+<span class="cm"># Install VOCA</span>
+<span class="cp">$</span> go install github.com/danterolle/voca@latest
+
+<span class="cm"># Launch</span>
+<span class="cp">$</span> voca</pre>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h3 style="margin-bottom:.7rem;font-size:.95rem;font-weight:600">Build from source</h3>
+                    <div class="code-block">
+                        <div class="code-hdr"><span>shell</span></div>
+                        <div class="code-body">
+                            <pre><span class="cp">$</span> git clone https://github.com/danterolle/voca
+<span class="cp">$</span> cd voca
+<span class="cp">$</span> make build
+<span class="cp">$</span> make run <span class="fl">ARGS</span>=<span class="sv">"--model phi4-mini:latest"</span></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="foot-logo">voca</div>
+        <p style="color:var(--mut);font-size:.875rem">A versatile offline communication assistant</p>
+        <div class="foot-links">
+            <a href="https://github.com/danterolle/voca" target="_blank"
+                style="display: inline-flex; align-items: center; gap: 0.35rem;">
+                <svg height="14" width="14" viewBox="0 0 16 16" fill="currentColor">
+                    <path
+                        d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+                </svg>
+                GitHub
+            </a>
+            <a href="https://github.com/danterolle/voca/blob/main/BENCHMARKS.md" target="_blank">Benchmarks</a>
+            <a href="https://github.com/danterolle/voca/blob/main/LICENSE" target="_blank">Apache 2.0</a>
+            <a href="https://ollama.com" target="_blank">Ollama</a>
+        </div>
+        <p class="foot-muted">Built with Go and Bubbletea · Powered by local LLMs</p>
+    </footer>
+
+    <script>
+        function switchTab(e, id) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            e.target.classList.add('active');
+            document.getElementById('tab-' + id).classList.add('active');
+        }
+        function doCopy(btn) {
+            navigator.clipboard.writeText('go install github.com/danterolle/voca@latest').then(() => {
+                btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ff5f5f" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>';
+                setTimeout(() => {
+                    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+
+</html>
