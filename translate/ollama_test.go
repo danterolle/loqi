@@ -5,17 +5,11 @@ import (
 	"testing"
 )
 
-func TestMockBackend_ImplementsBackend(t *testing.T) {
-	var _ Backend = (*MockBackend)(nil)
-}
-
-func TestDefaultPrompt_ImplementsPromptBuilder(t *testing.T) {
-	var _ PromptBuilder = (*defaultPrompt)(nil)
-}
-
-func TestStaticLanguages_ImplementsLanguageProvider(t *testing.T) {
-	var _ LanguageProvider = (*staticLanguages)(nil)
-}
+var (
+	_ Backend          = (*MockBackend)(nil)
+	_ PromptBuilder    = (*defaultPrompt)(nil)
+	_ LanguageProvider = (*staticLanguages)(nil)
+)
 
 func TestMockBackend_Translate(t *testing.T) {
 	b := NewMockBackend()
