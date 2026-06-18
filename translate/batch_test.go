@@ -25,12 +25,23 @@ func assertJSONResult(t *testing.T, got []byte, want any) {
 	if err := json.Unmarshal(got, &gotVal); err != nil {
 		t.Fatalf("invalid JSON result: %v\n%s", err, string(got))
 	}
-	wantJSON, _ := json.Marshal(want)
+	wantJSON, err := json.Marshal(want)
+	if err != nil {
+		t.Fatalf("failed to marshal expected value: %v", err)
+	}
 	var wantVal any
-	json.Unmarshal(wantJSON, &wantVal)
+	if err := json.Unmarshal(wantJSON, &wantVal); err != nil {
+		t.Fatalf("failed to normalize expected value: %v", err)
+	}
 
-	gotStr, _ := json.Marshal(gotVal)
-	wantStr, _ := json.Marshal(wantVal)
+	gotStr, err := json.Marshal(gotVal)
+	if err != nil {
+		t.Fatalf("failed to marshal result: %v", err)
+	}
+	wantStr, err := json.Marshal(wantVal)
+	if err != nil {
+		t.Fatalf("failed to marshal expected: %v", err)
+	}
 	if string(gotStr) != string(wantStr) {
 		t.Fatalf("expected:\n%s\n\ngot:\n%s", string(wantJSON), string(got))
 	}
