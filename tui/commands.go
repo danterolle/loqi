@@ -12,7 +12,7 @@ import (
 
 func (m Model) doTranslate(text, source, target string) tea.Cmd {
 	return func() tea.Msg {
-		result, err := m.core.Backend.Translate(context.Background(), text, source, target)
+		result, err := m.core.Translate(context.Background(), text, source, target)
 		return translateResultMsg{text: text, result: result, err: err}
 	}
 }

@@ -29,7 +29,7 @@ func Batch(ctx context.Context, core *Core, input []byte, from, to string) ([]by
 		return nil, fmt.Errorf("empty input")
 	}
 
-	result, err := core.Backend.Translate(ctx, text, from, to)
+	result, err := core.Translate(ctx, text, from, to)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +127,7 @@ func translateString(ctx context.Context, core *Core, val *any, from, to string,
 	}
 
 	v := (*val).(string)
-	result, err := core.Backend.Translate(ctx, v, from, to)
+	result, err := core.Translate(ctx, v, from, to)
 	<-translateSem
 
 	if err != nil {

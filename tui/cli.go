@@ -18,7 +18,7 @@ func NewCLIUI(source, target, text string) *CLIUI {
 }
 
 func (u *CLIUI) Run(ctx context.Context, core *translate.Core) error {
-	result, err := core.Backend.Translate(ctx, u.Text, u.Source, u.Target)
+	result, err := core.Translate(ctx, u.Text, u.Source, u.Target)
 	if err != nil {
 		return err
 	}
