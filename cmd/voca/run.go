@@ -43,6 +43,29 @@ func newCore(cfg *config.Config, model string) (*translate.Core, error) {
 	return translate.NewCore(backend, translate.NewStaticLanguages()), nil
 }
 
+func setupRun(cfg *config.Config) (*translate.Core, func()) {
+	model := cfg.Backend.Model
+	printBanner()
+	ollamaCmd, started := setupOllama(model)
+
+	var cleanup func()
+	if started && ollamaCmd != nil {
+		c := ollamaCmd
+		cleanup = func() { _ = c.Process.Kill() }
+	} else {
+		cleanup = func() {}
+	}
+
+	core, err := newCore(cfg, model)
+	if err != nil {
+		cleanup()
+		fmt.Fprintf(os.Stderr, "  ✖ Error: %v\n", err)
+		os.Exit(1)
+	}
+
+	return core, cleanup
+}
+
 func runTranslate(cfg *config.Config, args []string) {
 	model := cfg.Backend.Model
 	from := "auto"
@@ -79,18 +102,9 @@ func runTranslate(cfg *config.Config, args []string) {
 		os.Exit(1)
 	}
 
-	printBanner()
-	ollamaCmd, started := setupOllama(model)
-	if started && ollamaCmd != nil {
-		defer ollamaCmd.Process.Kill()
-	}
-
-	core, err := newCore(cfg, model)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "  ✖ Error: %v\n", err)
-		os.Exit(1)
-	}
-	var ui = tui.NewCLIUI(from, to, text)
+	core, cleanup := setupRun(cfg)
+	defer cleanup()
+	ui := tui.NewCLIUI(from, to, text)
 	if err := ui.Run(context.Background(), core); err != nil {
 		fmt.Fprintf(os.Stderr, "  ✖ Error: %v\n", err)
 		os.Exit(1)
@@ -136,15 +150,8 @@ func runBatch(cfg *config.Config, args []string) {
 		os.Exit(1)
 	}
 
-	ollamaCmd, started := setupOllama(model)
-	if started && ollamaCmd != nil {
-		defer ollamaCmd.Process.Kill()
-	}
-	core, err := newCore(cfg, model)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "  ✖ Error: %v\n", err)
-		os.Exit(1)
-	}
+	core, cleanup := setupRun(cfg)
+	defer cleanup()
 	ctx := context.Background()
 
 	output, err := translate.Batch(ctx, core, input, from, to)
@@ -162,23 +169,15 @@ func runTUI(cfg *config.Config) {
 	flag.StringVar(&model, "model", model, "translation model")
 	flag.Parse()
 
-	printBanner()
-	ollamaCmd, started := setupOllama(model)
-	if started && ollamaCmd != nil {
-		defer ollamaCmd.Process.Kill()
-	}
+	core, cleanup := setupRun(cfg)
+	defer cleanup()
 
 	fmt.Printf("\n  Starting terminal interface...")
 	time.Sleep(800 * time.Millisecond)
 	fmt.Printf("\n")
 
-	root, err := newCore(cfg, model)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "  ✖ Error: %v\n", err)
-		os.Exit(1)
-	}
 	ui := tui.NewBubbleTeaUI()
-	if err := ui.Run(context.Background(), root); err != nil {
+	if err := ui.Run(context.Background(), core); err != nil {
 		fmt.Fprintf(os.Stderr, "  ✖ Error: %v\n", err)
 	}
 }
