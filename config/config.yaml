@@ -1,0 +1,16 @@
+# voca configuration
+# Copy to ~/.config/voca/config.yaml and adjust as needed.
+# All fields are optional — omitted values use their defaults.
+
+backend:
+  type: ollama      # Backend type (default: ollama)
+  model: gemma3:1b  # Ollama model name (default: gemma4:e2b-it-qat)
+
+  # Ollama base URL (default: http://localhost:11434)
+  base_url: http://localhost:11434
+
+  # Model parameters (optional)
+  options:
+    temperature: 0.0
+    num_predict: 2048
+    top_p: 1.0

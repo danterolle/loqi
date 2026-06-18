@@ -43,6 +43,39 @@ voca                                          # TUI mode
 voca translate --from it --to en "Ciao mondo" # one-shot translation
 ```
 
+## Configuration
+
+voca loads settings from a YAML config file with the following priority (each level overrides the previous):
+
+1. CLI flags (`--model`, `--from`, `--to`, etc.)
+2. `--config <path>` flag
+3. `VOCA_CONFIG` environment variable
+4. `~/.config/voca/config.yaml`
+5. Hardcoded defaults
+
+**Example config file (`~/.config/voca/config.yaml`):**
+
+```yaml
+backend:
+  model: gemma3:1b
+  base_url: http://localhost:11434
+  options:
+    temperature: 0.0
+    num_predict: 2048
+```
+
+All fields are optional. CLI flags always override config values:
+
+```bash
+# Uses model from config file
+voca --config ./config.yaml translate --from it --to en "Ciao mondo"
+
+# Override model via CLI flag
+voca --config ./config.yaml translate --model phi4:latest --from it --to en "Ciao mondo"
+```
+
+See [`config/config.yaml`](config/config.yaml) for a full example with defaults.
+
 ## TUI mode
 
 Interactive terminal interface with auto-translate as you type.
