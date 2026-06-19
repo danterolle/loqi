@@ -4,8 +4,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/danterolle/voca/config"
 	"github.com/danterolle/voca/cmd/voca/commands"
+	"github.com/danterolle/voca/config"
 )
 
 var Version string
