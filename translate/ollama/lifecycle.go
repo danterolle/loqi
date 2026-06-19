@@ -59,7 +59,7 @@ func PullModel(model, baseURL string) error {
 		return fmt.Errorf("ollama pull: encode body: %w", err)
 	}
 
-	pullClient := &http.Client{}
+	pullClient := &http.Client{Timeout: 30 * time.Minute}
 	resp, err := pullClient.Post(baseURL+"/api/pull", "application/json", strings.NewReader(buf.String()))
 	if err != nil {
 		return fmt.Errorf("ollama pull: %w", err)
