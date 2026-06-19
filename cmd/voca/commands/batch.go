@@ -29,11 +29,13 @@ func RunBatch(cfg *config.Config, args []string) error {
 	}
 
 	input, err := ReadStdinOrFile(fs.Args())
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "  ✖ Error: %v\n", err)
+	if err != nil || input == nil {
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "  ✖ Error: %v\n", err)
+		}
 		fmt.Fprintf(os.Stderr, "Usage: voca batch --from <lang> --to <lang> [file]\n")
 		fs.PrintDefaults()
-		return fmt.Errorf("no input: %w", err)
+		return fmt.Errorf("no input: specify a file or pipe data to stdin")
 	}
 
 	core, cleanup, err := SetupRun(cfg, model)

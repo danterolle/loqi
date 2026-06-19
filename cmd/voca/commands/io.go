@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -43,23 +42,12 @@ func ReadStdinOrFile(args []string) ([]byte, error) {
 		return os.ReadFile(path)
 	}
 
-	data, err := readStdin()
-	if err != nil {
-		return nil, fmt.Errorf("stdin not available: %w", err)
-	}
-	if data == nil {
-		return nil, fmt.Errorf("no input file specified and stdin is a terminal")
-	}
-	return data, nil
+	return readStdin()
 }
 
 func readStdin() ([]byte, error) {
-	stat, err := os.Stdin.Stat()
-	if err != nil {
-		return nil, err
-	}
-	if (stat.Mode() & os.ModeCharDevice) != 0 {
-		return nil, nil // terminal, no piped data
+	if isTerminal() {
+		return nil, nil
 	}
 	return io.ReadAll(os.Stdin)
 }
