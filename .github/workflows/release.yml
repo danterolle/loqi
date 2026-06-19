@@ -23,3 +23,16 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Update docs version
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          sed -i "s/v[0-9.]\+/$TAG/" docs/index.html
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add docs/index.html
+          if git diff --cached --quiet; then
+            echo "Version already up-to-date"
+          else
+            git commit -m "docs: update version to $TAG"
+            git push
+          fi
