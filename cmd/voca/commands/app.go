@@ -19,20 +19,27 @@ const defaultFrom = "auto"
 const defaultTo = "en"
 
 func Run(cfg *config.Config, args []string) {
+	var err error
 	if len(args) > 1 {
 		switch args[1] {
 		case "translate":
-			RunTranslate(cfg, args[2:])
-			return
+			err = RunTranslate(cfg, args[2:])
 		case "batch":
-			RunBatch(cfg, args[2:])
-			return
+			err = RunBatch(cfg, args[2:])
 		case "-h", "--help":
 			PrintUsage()
 			return
+		default:
+			RunTUI(cfg, args[1:])
+			return
 		}
+	} else {
+		RunTUI(cfg, args[1:])
+		return
 	}
-	RunTUI(cfg, args[1:])
+	if err != nil {
+		Fatal(err)
+	}
 }
 
 func PrintUsage() {
@@ -115,11 +122,11 @@ func newCore(cfg *config.Config, model string) (*translate.Core, error) {
 	return translate.NewCore(backend, translate.NewStaticLanguages()), nil
 }
 
-func setupRun(cfg *config.Config, model string) (*translate.Core, func()) {
+func setupRun(cfg *config.Config, model string) (*translate.Core, func(), error) {
 	printBanner()
 	ollamaCmd, started, err := SetupOllama(model)
 	if err != nil {
-		Fatal(err)
+		return nil, nil, err
 	}
 
 	var cleanup func()
@@ -133,10 +140,10 @@ func setupRun(cfg *config.Config, model string) (*translate.Core, func()) {
 	core, err := newCore(cfg, model)
 	if err != nil {
 		cleanup()
-		Fatal(err)
+		return nil, nil, err
 	}
 
-	return core, cleanup
+	return core, cleanup, nil
 }
 
 func printBanner() {

@@ -9,7 +9,7 @@ import (
 	"github.com/danterolle/voca/tui"
 )
 
-func RunTranslate(cfg *config.Config, args []string) {
+func RunTranslate(cfg *config.Config, args []string) error {
 	model, from, to, fs, h, help := parseTranslateFlags("translate", args, cfg.Backend.Model)
 
 	if *h || *help {
@@ -26,17 +26,21 @@ func RunTranslate(cfg *config.Config, args []string) {
 
 	text, err := ReadInput(fs.Args())
 	if err != nil {
-		Fatal(err)
+		return err
 	}
 	if text == "" {
 		fmt.Fprintf(os.Stderr, "Usage: voca translate --from <lang> --to <lang> [text|file|stdin]\n")
 		fs.PrintDefaults()
-		os.Exit(1)
+		return fmt.Errorf("no input text or file provided")
 	}
 
-	core, cleanup := setupRun(cfg, model)
+	core, cleanup, err := setupRun(cfg, model)
+	if err != nil {
+		return err
+	}
 	defer cleanup()
 	if err := tui.RunCLI(context.Background(), core, from, to, text); err != nil {
-		Fatal(err)
+		return err
 	}
+	return nil
 }

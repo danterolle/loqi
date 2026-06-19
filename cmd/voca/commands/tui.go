@@ -17,7 +17,10 @@ func RunTUI(cfg *config.Config, args []string) {
 	fs.StringVar(&model, "model", model, "translation model")
 	fs.Parse(args)
 
-	core, cleanup := setupRun(cfg, model)
+	core, cleanup, err := setupRun(cfg, model)
+	if err != nil {
+		Fatal(err)
+	}
 	defer cleanup()
 
 	fmt.Printf("\n  Starting terminal interface...")
