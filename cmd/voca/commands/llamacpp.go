@@ -9,7 +9,11 @@ import (
 )
 
 func SetupLlamaCpp(model, baseURL, modelPath string, serverArgs []string) (cmd *exec.Cmd, started bool, err error) {
-	if llamacpp.Reachable(baseURL) {
+	if llamacpp.ServerRunning(baseURL) {
+		fmt.Printf("  ◆ Waiting for model to load...\n")
+		if !llamacpp.WaitForModelReady(60, baseURL) {
+			return nil, false, fmt.Errorf("model not ready at %s", baseURL)
+		}
 		return nil, false, nil
 	}
 
@@ -39,9 +43,9 @@ func SetupLlamaCpp(model, baseURL, modelPath string, serverArgs []string) (cmd *
 	}
 
 	started = true
-	if !llamacpp.WaitForReady(30, baseURL) {
+	if !llamacpp.WaitForModelReady(60, baseURL) {
 		_ = cmd.Process.Kill()
-		return cmd, started, fmt.Errorf("timeout waiting for llama-server to start")
+		return cmd, started, fmt.Errorf("timeout waiting for llama-server to load model")
 	}
 
 	fmt.Printf("  ◆ Online\n")

@@ -7,7 +7,7 @@ import (
 
 var httpClient = &http.Client{Timeout: 2 * time.Second}
 
-func Reachable(baseURL string) bool {
+func ServerRunning(baseURL string) bool {
 	resp, err := httpClient.Get(baseURL + "/v1/models")
 	if err != nil {
 		return false
@@ -16,10 +16,15 @@ func Reachable(baseURL string) bool {
 	return true
 }
 
-func WaitForReady(seconds int, baseURL string) bool {
+func WaitForModelReady(seconds int, baseURL string) bool {
+	client := &http.Client{Timeout: 2 * time.Second}
 	for i := 0; i < seconds; i++ {
-		if Reachable(baseURL) {
-			return true
+		resp, err := client.Get(baseURL + "/v1/models")
+		if err == nil {
+			resp.Body.Close()
+			if resp.StatusCode == http.StatusOK {
+				return true
+			}
 		}
 		time.Sleep(time.Second)
 	}
