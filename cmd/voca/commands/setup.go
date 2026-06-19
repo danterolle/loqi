@@ -11,7 +11,7 @@ import (
 
 func setupRun(cfg *config.Config, model string) (*translate.Core, func(), error) {
 	printBanner()
-	ollamaCmd, started, err := SetupOllama(model)
+	ollamaCmd, started, err := SetupOllama(model, cfg.Backend.BaseURL)
 	if err != nil {
 		return nil, nil, err
 	}

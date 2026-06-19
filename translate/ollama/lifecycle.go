@@ -9,12 +9,10 @@ import (
 	"time"
 )
 
-const apiBase = "http://localhost:11434"
-
 var httpClient = &http.Client{Timeout: 2 * time.Second}
 
-func Reachable() bool {
-	resp, err := httpClient.Get(apiBase + "/api/tags")
+func Reachable(baseURL string) bool {
+	resp, err := httpClient.Get(baseURL + "/api/tags")
 	if err != nil {
 		return false
 	}
@@ -22,9 +20,9 @@ func Reachable() bool {
 	return true
 }
 
-func WaitForReady(seconds int) bool {
+func WaitForReady(seconds int, baseURL string) bool {
 	for i := 0; i < seconds; i++ {
-		if Reachable() {
+		if Reachable(baseURL) {
 			return true
 		}
 		time.Sleep(time.Second)
@@ -32,8 +30,8 @@ func WaitForReady(seconds int) bool {
 	return false
 }
 
-func ModelExists(model string) bool {
-	resp, err := httpClient.Get(apiBase + "/api/tags")
+func ModelExists(model, baseURL string) bool {
+	resp, err := httpClient.Get(baseURL + "/api/tags")
 	if err != nil {
 		return false
 	}
@@ -54,7 +52,7 @@ func ModelExists(model string) bool {
 	return false
 }
 
-func PullModel(model string) error {
+func PullModel(model, baseURL string) error {
 	body := map[string]any{"name": model, "stream": true}
 	var buf strings.Builder
 	if err := json.NewEncoder(&buf).Encode(body); err != nil {
@@ -62,7 +60,7 @@ func PullModel(model string) error {
 	}
 
 	pullClient := &http.Client{}
-	resp, err := pullClient.Post(apiBase+"/api/pull", "application/json", strings.NewReader(buf.String()))
+	resp, err := pullClient.Post(baseURL+"/api/pull", "application/json", strings.NewReader(buf.String()))
 	if err != nil {
 		return fmt.Errorf("ollama pull: %w", err)
 	}
