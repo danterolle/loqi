@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/danterolle/voca/config"
 	"github.com/danterolle/voca/translate"
@@ -39,8 +41,9 @@ func RunBatch(cfg *config.Config, args []string) error {
 		return err
 	}
 	defer cleanup()
-	ctx := context.Background()
 
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 	output, err := translate.Batch(ctx, core, input, from, to)
 	if err != nil {
 		return err

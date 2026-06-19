@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/danterolle/voca/config"
 	"github.com/danterolle/voca/translate"
@@ -39,7 +41,10 @@ func RunTranslate(cfg *config.Config, args []string) error {
 		return err
 	}
 	defer cleanup()
-	if err := RunCLI(context.Background(), core, from, to, text); err != nil {
+
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+	if err := RunCLI(ctx, core, from, to, text); err != nil {
 		return err
 	}
 	return nil
