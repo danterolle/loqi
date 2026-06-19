@@ -8,11 +8,7 @@ import (
 	"github.com/danterolle/voca/config"
 )
 
-var Version string
-
 func main() {
-	commands.Version = Version
-
 	cfgPath := extractConfig()
 	cfg, err := config.Load(cfgPath)
 	if err != nil {

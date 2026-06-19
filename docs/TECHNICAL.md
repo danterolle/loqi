@@ -295,10 +295,14 @@ Unlike Ollama, llama.cpp does not auto-pull models — it requires a local GGUF 
 
 ## Version Injection
 
-Version comes exclusively from `-ldflags` at build time:
+A single variable `commands.Version` is injected at build time via `-ldflags`.
+Both Makefile and goreleaser target the same symbol:
 
 ```makefile
-# goreleaser sets this via ldflags:
+# Makefile
+LDFLAGS = -ldflags="-X github.com/danterolle/voca/cmd/voca/commands.Version=$(VERSION)"
+
+# goreleaser
 # -X github.com/danterolle/voca/cmd/voca/commands.Version={{ .Version }}
 ```
 

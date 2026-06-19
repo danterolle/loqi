@@ -2,7 +2,7 @@
 
 BINARY = voca
 VERSION = $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
-LDFLAGS = -ldflags="-X main.Version=$(VERSION)"
+LDFLAGS = -ldflags="-X github.com/danterolle/voca/cmd/voca/commands.Version=$(VERSION)"
 BUILD_DIR = build
 
 build:
