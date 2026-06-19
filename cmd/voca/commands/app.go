@@ -80,46 +80,6 @@ func parseTranslateFlags(name string, args []string, defaultModel string) (model
 	return
 }
 
-func newCore(cfg *config.Config, model string) (*translate.Core, error) {
-	prompt := translate.NewDefaultPrompt()
-
-	var backend *ollama.Backend
-	switch cfg.Backend.Type {
-	case "ollama":
-		backend = ollama.NewBackend(cfg.Backend.BaseURL, model, prompt)
-	default:
-		return nil, fmt.Errorf("unsupported backend type: %q", cfg.Backend.Type)
-	}
-
-	readFloat := func(key string) (float64, bool) {
-		v, ok := cfg.Backend.Options[key]
-		if !ok {
-			return 0, false
-		}
-		switch n := v.(type) {
-		case float64:
-			return n, true
-		case int:
-			return float64(n), true
-		}
-		return 0, false
-	}
-
-	if np, ok := readFloat("num_predict"); ok {
-		backend.NumPredict = int(np)
-	}
-	if to, ok := readFloat("timeout"); ok {
-		backend.Client.Timeout = time.Duration(to) * time.Second
-	}
-	if t, ok := readFloat("temperature"); ok {
-		backend.Temperature = t
-	}
-	if p, ok := readFloat("top_p"); ok {
-		backend.TopP = p
-	}
-	return translate.NewCore(backend, translate.NewStaticLanguages()), nil
-}
-
 func setupRun(cfg *config.Config, model string) (*translate.Core, func(), error) {
 	printBanner()
 	ollamaCmd, started, err := SetupOllama(model)
@@ -135,13 +95,44 @@ func setupRun(cfg *config.Config, model string) (*translate.Core, func(), error)
 		cleanup = func() {}
 	}
 
-	core, err := newCore(cfg, model)
-	if err != nil {
+	prompt := translate.NewDefaultPrompt()
+	var backend *ollama.Backend
+	switch cfg.Backend.Type {
+	case "ollama":
+		backend = ollama.NewBackend(cfg.Backend.BaseURL, model, prompt)
+	default:
 		cleanup()
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("unsupported backend type: %q", cfg.Backend.Type)
 	}
 
-	return core, cleanup, nil
+	if np, ok := readFloatOption(cfg.Backend.Options, "num_predict"); ok {
+		backend.NumPredict = int(np)
+	}
+	if to, ok := readFloatOption(cfg.Backend.Options, "timeout"); ok {
+		backend.Client.Timeout = time.Duration(to) * time.Second
+	}
+	if t, ok := readFloatOption(cfg.Backend.Options, "temperature"); ok {
+		backend.Temperature = t
+	}
+	if p, ok := readFloatOption(cfg.Backend.Options, "top_p"); ok {
+		backend.TopP = p
+	}
+
+	return translate.NewCore(backend, translate.NewStaticLanguages()), cleanup, nil
+}
+
+func readFloatOption(options map[string]any, key string) (float64, bool) {
+	v, ok := options[key]
+	if !ok {
+		return 0, false
+	}
+	switch n := v.(type) {
+	case float64:
+		return n, true
+	case int:
+		return float64(n), true
+	}
+	return 0, false
 }
 
 func printBanner() {
