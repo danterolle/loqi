@@ -18,7 +18,7 @@ func RunBubbleTea(ctx context.Context, core *translate.Core) error {
 		}
 	}()
 
-	m := newModel(core)
+	m := newModel(ctx, core)
 	p := tea.NewProgram(m, tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		return err

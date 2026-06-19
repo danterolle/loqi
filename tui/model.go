@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"context"
 	"time"
 
 	"github.com/charmbracelet/bubbles/textarea"
@@ -32,6 +33,7 @@ type (
 )
 
 type Model struct {
+	ctx       context.Context
 	core      *translate.Core
 	langCodes []string
 	langNames map[string]string
@@ -49,7 +51,7 @@ type Model struct {
 	leadingDone  bool
 }
 
-func newModel(core *translate.Core) Model {
+func newModel(ctx context.Context, core *translate.Core) Model {
 	ta := textarea.New()
 	ta.Placeholder = "Type text to translate..."
 	ta.Prompt = ""
@@ -72,6 +74,7 @@ func newModel(core *translate.Core) Model {
 	}
 
 	return Model{
+		ctx:       ctx,
 		core:      core,
 		langCodes: codes,
 		langNames: names,
