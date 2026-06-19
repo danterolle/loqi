@@ -40,8 +40,9 @@ type Model struct {
 	srcIdx    int
 	tgtIdx    int
 
-	textarea textarea.Model
-	output   string
+	textarea   textarea.Model
+	output     string
+	lastInput  string
 
 	focused      focusField
 	status       string

@@ -45,9 +45,10 @@ func (m Model) handleDebounce(msg debounceMsg) (Model, tea.Cmd) {
 	}
 	m.leadingDone = false
 	text := m.textarea.Value()
-	if text == "" || m.output == text {
+	if text == "" || text == m.lastInput {
 		return m, nil
 	}
+	m.lastInput = text
 	src := m.langCodes[m.srcIdx]
 	tgt := m.langCodes[m.tgtIdx]
 	m.status = fmt.Sprintf("Translating... (%s -> %s)", m.langNames[src], m.langNames[tgt])
@@ -126,6 +127,7 @@ func (m Model) handleInputKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "ctrl+l":
 		m.textarea.Reset()
 		m.output = ""
+		m.lastInput = ""
 		m.translateSeq++
 		m.leadingDone = false
 		m.status = "Cleared."
@@ -157,6 +159,7 @@ func (m Model) handleTextChange(msg tea.KeyMsg) (Model, tea.Cmd) {
 		} else {
 			m.leadingDone = true
 			text := m.textarea.Value()
+			m.lastInput = text
 			src := m.langCodes[m.srcIdx]
 			tgt := m.langCodes[m.tgtIdx]
 			m.status = fmt.Sprintf("Translating... (%s -> %s)", m.langNames[src], m.langNames[tgt])
