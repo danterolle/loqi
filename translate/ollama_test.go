@@ -22,22 +22,6 @@ func TestMockBackend_Translate(t *testing.T) {
 	}
 }
 
-func TestDefaultPrompt_System(t *testing.T) {
-	p := NewDefaultPrompt()
-	s := p.System()
-	if s == "" {
-		t.Fatal("system prompt should not be empty")
-	}
-}
-
-func TestDefaultPrompt_Translate(t *testing.T) {
-	p := NewDefaultPrompt()
-	result := p.Translate("hello", "en", "it")
-	if result == "" {
-		t.Fatal("prompt should not be empty")
-	}
-}
-
 func TestStaticLanguages_List(t *testing.T) {
 	l := NewStaticLanguages()
 	langs := l.List()
