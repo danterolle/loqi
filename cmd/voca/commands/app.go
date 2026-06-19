@@ -15,31 +15,25 @@ var Quiet bool
 const defaultFrom = "auto"
 const defaultTo = "en"
 
-func Run(cfg *config.Config, args []string) {
+func Run(cfg *config.Config, args []string) error {
 	if len(args) > 1 {
 		switch args[1] {
 		case "translate":
-			if err := RunTranslate(cfg, args[2:]); err != nil {
-				Fatal(err)
-			}
-			return
+			return RunTranslate(cfg, args[2:])
 		case "batch":
-			if err := RunBatch(cfg, args[2:]); err != nil {
-				Fatal(err)
-			}
-			return
+			return RunBatch(cfg, args[2:])
 		case "languages":
 			fmt.Println("Supported language codes:")
 			for _, l := range translate.NewStaticLanguages().List() {
 				fmt.Printf("  %-6s %s\n", l.Code, l.Name)
 			}
-			return
+			return nil
 		case "-h", "--help":
 			PrintUsage()
-			return
+			return nil
 		}
 	}
-	RunTUI(cfg, args[1:])
+	return RunTUI(cfg, args[1:])
 }
 
 func PrintUsage() {
@@ -82,7 +76,6 @@ func logDiag(format string, args ...any) {
 
 func Fatal(err error) {
 	fmt.Fprintf(os.Stderr, "  ✖ Error: %v\n", err)
-	os.Exit(1)
 }
 
 func validateLangs(from, to string) error {

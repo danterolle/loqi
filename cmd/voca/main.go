@@ -13,9 +13,13 @@ func main() {
 	cfg, err := config.Load(cfgPath)
 	if err != nil {
 		commands.Fatal(err)
+		os.Exit(1)
 	}
 
-	commands.Run(cfg, args)
+	if err := commands.Run(cfg, args); err != nil {
+		commands.Fatal(err)
+		os.Exit(1)
+	}
 }
 
 func extractConfig() (string, []string) {
