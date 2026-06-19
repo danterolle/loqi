@@ -34,15 +34,15 @@ type (
 
 type Model struct {
 	ctx       context.Context
-	core      *translate.Core
+	backend   translate.Backend
 	langCodes []string
 	langNames map[string]string
 	srcIdx    int
 	tgtIdx    int
 
-	textarea   textarea.Model
-	output     string
-	lastInput  string
+	textarea  textarea.Model
+	output    string
+	lastInput string
 
 	focused      focusField
 	status       string
@@ -52,18 +52,18 @@ type Model struct {
 	leadingDone  bool
 }
 
-func newModel(ctx context.Context, core *translate.Core) Model {
+func newModel(ctx context.Context, backend translate.Backend, langs translate.LanguageProvider) Model {
 	ta := textarea.New()
 	ta.Placeholder = "Type text to translate..."
 	ta.Prompt = ""
 	ta.CharLimit = 0
 	ta.Focus()
 
-	langs := core.Languages.List()
-	codes := make([]string, len(langs))
-	names := make(map[string]string, len(langs))
+	list := langs.List()
+	codes := make([]string, len(list))
+	names := make(map[string]string, len(list))
 	srcIdx, tgtIdx := 0, 1
-	for i, l := range langs {
+	for i, l := range list {
 		codes[i] = l.Code
 		names[l.Code] = l.Name
 		if l.Code == "auto" {
@@ -76,7 +76,7 @@ func newModel(ctx context.Context, core *translate.Core) Model {
 
 	return Model{
 		ctx:       ctx,
-		core:      core,
+		backend:   backend,
 		langCodes: codes,
 		langNames: names,
 		srcIdx:    srcIdx,

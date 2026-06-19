@@ -10,7 +10,7 @@ import (
 	"github.com/danterolle/voca/translate"
 )
 
-func RunBubbleTea(ctx context.Context, core *translate.Core) error {
+func RunBubbleTea(ctx context.Context, backend translate.Backend, langs translate.LanguageProvider) error {
 	defer func() {
 		if r := recover(); r != nil {
 			fmt.Fprintf(os.Stderr, "  ✖ panic: %v\n", r)
@@ -18,7 +18,7 @@ func RunBubbleTea(ctx context.Context, core *translate.Core) error {
 		}
 	}()
 
-	m := newModel(ctx, core)
+	m := newModel(ctx, backend, langs)
 	p := tea.NewProgram(m, tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		return err
