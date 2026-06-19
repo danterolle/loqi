@@ -88,5 +88,3 @@ func UnloadModel(model, baseURL string) {
 	json.NewEncoder(&buf).Encode(body)
 	httpClient.Post(baseURL+"/api/generate", "application/json", strings.NewReader(buf.String()))
 }
-
-
