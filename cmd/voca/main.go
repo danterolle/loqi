@@ -9,16 +9,16 @@ import (
 )
 
 func main() {
-	cfgPath := extractConfig()
+	cfgPath, args := extractConfig()
 	cfg, err := config.Load(cfgPath)
 	if err != nil {
 		commands.Fatal(err)
 	}
 
-	commands.Run(cfg, os.Args)
+	commands.Run(cfg, args)
 }
 
-func extractConfig() string {
+func extractConfig() (string, []string) {
 	var cfgPath string
 	filtered := make([]string, 0, len(os.Args))
 	for i := 0; i < len(os.Args); i++ {
@@ -33,6 +33,5 @@ func extractConfig() string {
 		}
 		filtered = append(filtered, os.Args[i])
 	}
-	os.Args = filtered
-	return cfgPath
+	return cfgPath, filtered
 }
