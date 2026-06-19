@@ -26,6 +26,7 @@ This tool is also a way to learn: to see whether a small model (Gemma 1b/2b/4b/o
 - [Quick start](#quick-start)
 - [TUI mode](#tui-mode)
 - [CLI mode](#cli-mode-one-shot)
+- [Supported languages](#supported-languages)
 - [Batch mode](#batch-mode)
 - [Benchmarks](#benchmarks)
 - [Technical documentation](#technical-documentation)
@@ -168,6 +169,18 @@ voca translate --from it --to en test_data/malavoglia.md
 -h, --help    Show usage with examples
 ```
 
+Language codes are validated at startup: invalid codes or using `auto` as target produce a clear error with the list of supported codes.
+
+## Supported languages
+
+List all supported language codes and names:
+
+```bash
+voca languages
+```
+
+Current languages: `ar`, `cs`, `da`, `de`, `el`, `en`, `es`, `fi`, `fr`, `hi`, `hu`, `it`, `ja`, `ko`, `nl`, `pl`, `pt`, `ro`, `ru`, `sv`, `th`, `tr`, `vi`, `zh`, plus `auto` (source auto-detect).
+
 ## Batch mode
 
 Translate JSON values or text files in one pass.
@@ -192,6 +205,8 @@ Auto-detects JSON (preserves structure, translates values) vs plain text (transl
 --model       Model name (default: gemma4:e2b-it-qat)
 -h, --help    Show usage with examples
 ```
+
+Language codes are validated the same way as CLI mode — invalid input produces a clear error before any translation call.
 
 ## Benchmarks
 
