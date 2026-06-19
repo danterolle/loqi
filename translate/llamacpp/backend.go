@@ -5,31 +5,24 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/danterolle/voca/translate"
 )
 
 type chatCompletionRequest struct {
-	Model       string        `json:"model"`
-	Messages    []chatMessage `json:"messages"`
-	Temperature float64       `json:"temperature,omitempty"`
-	TopP        float64       `json:"top_p,omitempty"`
-	MaxTokens   int           `json:"max_tokens,omitempty"`
-	Stream      bool          `json:"stream"`
-}
-
-type chatMessage struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
+	Model       string              `json:"model"`
+	Messages    []translate.Message `json:"messages"`
+	Temperature float64             `json:"temperature,omitempty"`
+	TopP        float64             `json:"top_p,omitempty"`
+	MaxTokens   int                 `json:"max_tokens,omitempty"`
+	Stream      bool                `json:"stream"`
 }
 
 type chatCompletionResponse struct {
 	Choices []struct {
-		Message chatMessage `json:"message"`
+		Message translate.Message `json:"message"`
 	} `json:"choices"`
 }
 
@@ -45,15 +38,10 @@ type Backend struct {
 
 func NewBackend(baseURL, model string, prompt translate.PromptBuilder) *Backend {
 	return &Backend{
-		BaseURL:     baseURL,
-		Model:       model,
-		Prompt:      prompt,
-		MaxTokens:   2048,
-		Temperature: 0.0,
-		TopP:        1.0,
-		Client: &http.Client{
-			Timeout: 2 * time.Minute,
-		},
+		BaseURL: baseURL,
+		Model:   model,
+		Prompt:  prompt,
+		Client:  translate.NewHTTPClient(),
 	}
 }
 
@@ -70,19 +58,14 @@ func (b *Backend) Translate(ctx context.Context, text, source, target string) (s
 		return "", err
 	}
 
-	resp, err := b.Client.Do(req)
+	body, err := translate.DoTranslate(ctx, b.Client, req, "llamacpp")
 	if err != nil {
-		return "", fmt.Errorf("llamacpp: %w", err)
+		return "", err
 	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		body, _ := io.ReadAll(resp.Body)
-		return "", fmt.Errorf("llamacpp: %s %s", resp.Status, strings.TrimSpace(string(body)))
-	}
+	defer body.Close()
 
 	var cr chatCompletionResponse
-	if err := json.NewDecoder(resp.Body).Decode(&cr); err != nil {
+	if err := json.NewDecoder(body).Decode(&cr); err != nil {
 		return "", fmt.Errorf("llamacpp: decode: %w", err)
 	}
 
@@ -96,7 +79,7 @@ func (b *Backend) Translate(ctx context.Context, text, source, target string) (s
 func (b *Backend) buildRequest(ctx context.Context, text, source, target string) (*http.Request, error) {
 	body := chatCompletionRequest{
 		Model: b.Model,
-		Messages: []chatMessage{
+		Messages: []translate.Message{
 			{Role: "system", Content: b.Prompt.System()},
 			{Role: "user", Content: b.Prompt.Translate(text, source, target)},
 		},

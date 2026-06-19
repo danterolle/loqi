@@ -5,31 +5,22 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/danterolle/voca/translate"
 )
 
-type message struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
-}
-
 type chatRequest struct {
-	Model    string         `json:"model"`
-	Messages []message      `json:"messages"`
-	Stream   bool           `json:"stream"`
-	Options  map[string]any `json:"options"`
+	Model    string              `json:"model"`
+	Messages []translate.Message `json:"messages"`
+	Stream   bool                `json:"stream"`
+	Options  map[string]any      `json:"options"`
 }
 
 type chatResponse struct {
-	Message message `json:"message"`
+	Message translate.Message `json:"message"`
 }
-
-const defaultNumPredict = 2048
 
 type Backend struct {
 	BaseURL     string
@@ -43,15 +34,10 @@ type Backend struct {
 
 func NewBackend(baseURL, model string, prompt translate.PromptBuilder) *Backend {
 	return &Backend{
-		BaseURL:     baseURL,
-		Model:       model,
-		Prompt:      prompt,
-		NumPredict:  defaultNumPredict,
-		Temperature: 0.0,
-		TopP:        1.0,
-		Client: &http.Client{
-			Timeout: 2 * time.Minute,
-		},
+		BaseURL: baseURL,
+		Model:   model,
+		Prompt:  prompt,
+		Client:  translate.NewHTTPClient(),
 	}
 }
 
@@ -68,20 +54,15 @@ func (b *Backend) Translate(ctx context.Context, text, source, target string) (s
 		return "", err
 	}
 
-	resp, err := b.Client.Do(req)
+	body, err := translate.DoTranslate(ctx, b.Client, req, "ollama")
 	if err != nil {
-		return "", fmt.Errorf("ollama: %w", err)
+		return "", err
 	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		body, _ := io.ReadAll(resp.Body)
-		return "", fmt.Errorf("ollama: %s %s", resp.Status, strings.TrimSpace(string(body)))
-	}
+	defer body.Close()
 
 	var cr chatResponse
-	if err := json.NewDecoder(resp.Body).Decode(&cr); err != nil {
-		return "", fmt.Errorf("decode: %w", err)
+	if err := json.NewDecoder(body).Decode(&cr); err != nil {
+		return "", fmt.Errorf("ollama: decode: %w", err)
 	}
 
 	return strings.TrimSpace(cr.Message.Content), nil
@@ -98,7 +79,7 @@ func (b *Backend) buildRequest(ctx context.Context, text, source, target string)
 
 	body := chatRequest{
 		Model: b.Model,
-		Messages: []message{
+		Messages: []translate.Message{
 			{Role: "system", Content: b.Prompt.System()},
 			{Role: "user", Content: b.Prompt.Translate(text, source, target)},
 		},
@@ -108,12 +89,12 @@ func (b *Backend) buildRequest(ctx context.Context, text, source, target string)
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(body); err != nil {
-		return nil, fmt.Errorf("encode: %w", err)
+		return nil, fmt.Errorf("ollama: encode: %w", err)
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, b.BaseURL+"/api/chat", &buf)
 	if err != nil {
-		return nil, fmt.Errorf("request: %w", err)
+		return nil, fmt.Errorf("ollama: request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 	return req, nil
