@@ -1,12 +1,12 @@
 ## What It Is
 
-Voca is a terminal-based translator that runs locally through Ollama LLMs. It works in three modes: an interactive TUI built with bubbletea, a `voca translate` command for one-shot translations, and `voca batch` for bulk-translating JSON or plain text files. 
+Voca is a terminal-based translator that runs locally through LLMs. It supports two backends: **Ollama** (default) and **llama.cpp**. It works in three modes: an interactive TUI built with bubbletea, a `voca translate` command for one-shot translations, and `voca batch` for bulk-translating JSON or plain text files.
 
-The entire codebase is Go with only five external dependencies (bubbletea, bubbles, lipgloss, yaml.v3, atotto/clipboard), and the sole backend is Ollama over HTTP.
+The entire codebase is Go with only five external dependencies (bubbletea, bubbles, lipgloss, yaml, atotto/clipboard).
 
 ## Package Structure
 
-Seven packages (plus `cmd/bench`) with a linear dependency graph — no cycles:
+Eight packages (plus `cmd/bench`) with a linear dependency graph — no cycles:
 
 ```
 cmd/voca/main.go
@@ -15,33 +15,54 @@ cmd/voca/main.go
        ├─ translate.go      ── RunTranslate, RunCLI
        ├─ batch.go          ── RunBatch
        ├─ tui.go            ── RunTUI
-       ├─ setup.go          ── backend initialization
+       ├─ setup.go          ── SetupRun (backend routing), option helpers
        ├─ ollama.go         ── Ollama lifecycle (start, wait, pull)
-       ├─ io.go             ── input reading
+       ├─ llamacpp.go       ── llama.cpp lifecycle (start, wait)
+       ├─ io.go             ── input reading (args, file, stdin)
        └─ banner.go         ── ANSI logo
   ├─ translate/             ── domain logic
   │   ├─ interfaces.go      ── Backend, PromptBuilder, LanguageProvider
   │   ├─ core.go            ── thin Backend + LanguageProvider wrapper
   │   ├─ languages.go       ── language map + sorted codes (init-time)
   │   ├─ default_prompt.go  ── system + user prompt templates
-  │   ├─ batch.go           ── recursive JSON walker + worker pool
-  │   ├─ mock_backend.go    ── test double
-  │   └─ ollama/
-  │       ├─ backend.go     ── HTTP /api/chat client
-  │       └─ lifecycle.go   ── health checks, model pull
+  │   ├─ batch.go           ── batch entry point (JSON dispatch)
+  │   ├─ json_translator.go ── recursive JSON walker + worker pool
+  │   ├─ mock_backend.go    
+  │   ├─ ollama/
+  │   │   ├─ backend.go     ── HTTP /api/chat client
+  │   │   ├─ lifecycle.go   ── health checks, model pull/unload
+  │   │   └─ progress.go    ── ANSI progress bar rendering
+  │   └─ llamacpp/
+  │       ├─ backend.go     ── OpenAI-compatible /v1/chat/completions client
+  │       └─ lifecycle.go   ── server check, model-ready polling
   ├─ tui/                   ── Bubble Tea app
   │   ├─ model.go / update.go / view.go
   │   ├─ commands.go        ── doTranslate, copyClipboard
   │   ├─ styles.go / ui.go
   ├─ config/                ── YAML config loader
-  └─ cmd/bench/             ── multi-language benchmark harness
+  └─ cmd/bench/             ── multi-language benchmark
 ```
 
 Domain code lives in `translate` with its interfaces; `commands` handles setup and dispatch; `tui` owns the UI; `config` loads and merges YAML.
 
+## Backend Selection
+
+SetupRun dispatches based on `cfg.Backend.Type`:
+
+- **`ollama`** — calls `SetupOllama` (starts `ollama serve` if not running, pulls model if missing, calls `UnloadModel` on cleanup)
+- **`llamacpp`** — calls `SetupLlamaCpp` (starts `llama-server --model <path>` if `model_path` is set, or connects to an existing server; no auto-pull; kills subprocess on cleanup if Voca started it)
+
+Both paths return a `*translate.Core` wrapping a backend that satisfies `translate.Backend`, plus a `func()` cleanup closure.
+
+```go
+type Backend interface {
+    Translate(ctx context.Context, text, source, target string) (string, error)
+}
+```
+
 ## TUI Mode
 
-When the user launches `voca` with no arguments, `Run()` falls through to `RunTUI`, which calls `setupRun` to initialize the backend and then passes `core.Backend` and `core.Languages` directly to `RunBubbleTea` — the TUI has no dependency on `Core` itself.
+When the user launches `voca` with no arguments, `Run()` falls through to `RunTUI`, which calls `SetupRun` to initialize the backend and then passes `core.Backend` and `core.Languages` directly to `RunBubbleTea` — the TUI has no dependency on `Core` itself.
 
 The TUI follows bubbletea's Model-View-Update pattern. Here is the flow from keystroke to rendered translation:
 
@@ -54,7 +75,7 @@ handleTextChange
     ├── leadingDone == false?
     │       │  yes ──► leadingDone = true
     │       │           lastInput = text
-    │       │           doTranslate(text) ──► HTTP /api/chat ──► parse response
+    │       │           doTranslate(text) ──► backend.Translate ──► parse response
     │       │           status = "Translating..."
     │       │
     │       └── no  ──► translateSeq++
@@ -95,14 +116,19 @@ The `lastInput` field exists to solve a subtle bug: without it, the debounce han
 parseTranslateFlags ──► ReadInput (text, file or stdin)
                              │
                              ▼
-                         setupRun(cfg, model)
+                         SetupRun(cfg, model)
                              │
                              ├── printBanner()
-                             ├── SetupOllama(model, baseURL)
-                             │       ├── Reachable? ──► no ──► start ollama serve
-                             │       │                      ──► WaitForReady(30s)
-                             │       ├── ModelExists? ──► no ──► PullModel
-                             │       └── return cmd handle
+                             ├── switch cfg.Backend.Type:
+                             │     ollama  ──► SetupOllama()
+                             │                   ├── Reachable? ──► no ──► start ollama serve
+                             │                   │                      ──► WaitForReady(30s)
+                             │                   ├── ModelExists? ──► no ──► PullModel
+                             │                   └── return cmd handle
+                             │     llamacpp ──► SetupLlamaCpp()
+                             │                    ├── ServerRunning? ──► yes ──► wait for model
+                             │                    ├── no + model_path? ──► start llama-server
+                             │                    └── return cmd handle
                              ├── build backend with config options
                              └── return *Core + cleanup()
                              │
@@ -119,11 +145,7 @@ parseTranslateFlags ──► ReadInput (text, file or stdin)
                          fmt.Println(result)
 ```
 
-The signal context ensures that if the user presses CTRL+C while translating, the deferred `cleanup()` runs — which kills the Ollama process only if Voca started it. This distinction matters: if Ollama was already running when Voca launched, cleanup is a no-op.
-
-`setupRun` is the central factory. It prints the banner, ensures Ollama is running and has the model, creates the HTTP backend with config-driven overrides (`temperature`, `top_p`, `num_predict`, `timeout`), and returns a `*translate.Core` together with a cleanup closure. 
-
-Both `RunTranslate` and `RunBatch` call it, as does `RunTUI`. The `translate.Core` it returns is a thin struct that aggregates a `Backend` and a `LanguageProvider` — its `Translate` method simply delegates to `Backend.Translate`, and the TUI ignores it entirely, using `core.Backend` and `core.Languages` directly.
+The signal context ensures that if the user presses CTRL+C while translating, the deferred `cleanup()` runs — which kills the subprocess only if Voca started it. This distinction matters: if the backend was already running when Voca launched, cleanup is a no-op.
 
 ## Batch Mode
 
@@ -146,12 +168,12 @@ Input bytes
     │       │                  translateString   worker  worker
     │       │                    (max 3           pool    pool
     │       │                     concurrent)
-    │       │                               │
-    │       │                               ▼
-    │       │                      json.MarshalIndent(data)
-    │       │                               │
-    │       │                               ▼
-    │       │                             result
+    │       │                                  │
+    │       │                                  ▼
+    │       │                        json.MarshalIndent(data)
+    │       │                                  │
+    │       │                                  ▼
+    │       │                                result
     │       │
     │       └── no ──► core.Translate(ctx, text, from, to)
     │                                  │
@@ -162,23 +184,9 @@ Input bytes
 fmt.Println(string(output))
 ```
 
-The JSON walker uses a fixed pool of 3 workers (`batchWorkers`). Maps are processed by sending key-value pairs over a buffered channel and writing results under a mutex. Slices are processed by sending indices over a channel — workers write directly to the slice by index, no mutex needed.
+The JSON walker lives in `json_translator.go` (separated from `batch.go` during a refactor). It uses a fixed pool of 3 workers (`batchWorkers`). Maps are processed by sending key-value pairs over a buffered channel and writing results under a mutex. Slices are processed by sending indices over a channel — workers write directly to the slice by index, no mutex needed.
 
-```
-processMapNode:
-    collect entries ──► buffered channel ──► 3 goroutines ──► processNode each child
-                                                       │
-                                                       ▼
-                                              mutex protect map write
-
-processSliceNode:
-    collect indices ──► buffered channel ──► 3 goroutines ──► processNode each child
-                                                       │
-                                                       ▼
-                                              direct slice[i] write
-```
-
-Each string translation goes through a semaphore (`sem chan struct{}` with cap 3) to cap concurrency at 3 in-flight requests to Ollama. If any worker returns an error, it writes to `errCh` and cancels the shared context; all other workers see `ctx.Done()` and exit. Non-string values (numbers, booleans, null) pass through untouched with no function call.
+Each string translation goes through a semaphore (`sem chan struct{}` with cap 3) to cap concurrency at 3 in-flight requests to the backend. If any worker returns an error, it writes to `errCh` and cancels the shared context; all other workers see `ctx.Done()` and exit. Non-string values (numbers, booleans, null) pass through untouched with no function call.
 
 ## Language System
 
@@ -227,7 +235,7 @@ backend:
 
 This changes only the URL; everything else keeps its default.
 
-Options from `backend.options` are read as `map[string]any` and applied to the `ollama.Backend` struct after construction. The `readFloatOption` helper handles both `float64` and `int` YAML types, since the YAML parser returns `int` for unquoted integers and `float64` for decimal numbers.
+Options from `backend.options` are read as `map[string]any` and applied to the backend struct after construction. The helpers `intOption`, `floatOption`, and `durationOption` wrap the low-level `readFloatOption` to provide defaults.
 
 ## Ollama Lifecycle Management
 
@@ -254,7 +262,36 @@ ollama.ModelExists(model, baseURL) ──► GET /api/tags, parse JSON, match na
                      error → kill Ollama if we started it
 ```
 
-The `Reachable` check uses a shared package-level `httpClient` with 2-second timeout. `PullModel` uses a separate `pullClient` with 30-minute timeout because model downloads can be large. Progress rendering happens in `renderPullStatus` which paints an ANSI progress bar for download percentages, short status lines for layer pulling, and a checkmark on completion.
+The `Reachable` check uses a shared package-level `httpClient` with 2-second timeout. `PullModel` uses a separate `pullClient` with 30-minute timeout because model downloads can be large. Progress rendering is in `progress.go` (separated from lifecycle logic during a refactor).
+
+On cleanup, `UnloadModel` sends `POST /api/generate` with `keep_alive=0` to force Ollama to release the model — this prevents orphan `llama-server` processes from staying resident in memory.
+
+## llama.cpp Lifecycle Management
+
+`SetupLlamaCpp` in `commands/llamacpp.go`:
+
+```
+llamacpp.ServerRunning(baseURL)   ──► GET /v1/models
+    │
+    ├── running ──► WaitForModelReady(60s) — poll /v1/models until 200
+    │                 return (no process to kill on cleanup)
+    │
+    └── not running ──► exec.LookPath("llama-server")?
+    │       │
+    │       ├── not found ──► error
+    │       │
+    │       └── found + model_path set ──► exec.Command("llama-server",
+    │                                        "--model", path,
+    │                                        "--host", host,
+    │                                        "--port", port,
+    │                                        server_args...)
+    │                                      WaitForModelReady(60s)
+    │                                      return (kill on cleanup)
+    │
+    └── not running + no model_path ──► error with instructions
+```
+
+Unlike Ollama, llama.cpp does not auto-pull models — it requires a local GGUF file. Extra flags (`--ctx-size`, `--ngl`, `--threads`, etc.) can be passed via the `server_args` config field.
 
 ## Version Injection
 
@@ -269,15 +306,14 @@ There is no runtime `git describe` call — it would fail in distributed binarie
 
 ## Test Strategy
 
-`translate.MockBackend` implements `translate.Backend` with a replaceable `TranslateFunc` field, defaulting to `"[source->target] text"`. This lets the batch tests verify JSON tree walking, structure preservation, non-string passthrough, and error propagation without any HTTP calls. 
+`translate.MockBackend` implements `translate.Backend` with a replaceable `TranslateFunc` field, defaulting to `"[source->target] text"`. This lets the batch tests verify JSON tree walking, structure preservation, non-string passthrough, and error propagation without any HTTP calls.
 
-Config tests verify defaults, file loading, partial overrides, and YAML parse errors. Interface compliance is checked at compile time with package-level `var _ Backend = (*MockBackend)(nil)` assertions. 
+Config tests verify defaults, file loading, partial overrides, and YAML parse errors. Interface compliance is checked at compile time with package-level `var _ Backend = (*MockBackend)(nil)` assertions.
 
 There is no test coverage for the `tui` or `commands` packages.
 
 ## Known Limitations
 
-- The `wrap()` function in `tui/view.go` splits on spaces — it does not handle CJK text where word boundaries are not marked by whitespace so Chinese, Japanese and Korean output will not wrap correctly in the TUI output pane.
+- The `wrap()` function in `tui/view.go` splits on spaces — it does not handle CJK text where word boundaries are not marked by whitespace, so Chinese, Japanese and Korean output will not wrap correctly in the TUI output pane.
 - The batch worker pool is hardcoded to 3 goroutines with no configuration knob.
-- Only the Ollama backend exists; the `Backend` interface would accept others, but none are implemented.
-- At the moment there is no caching layer: every translation request, even for identical text, hits the Ollama API.
+- There is no caching layer: every translation request, even for identical text, hits the backend API.

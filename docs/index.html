@@ -714,17 +714,18 @@
 
         <div class="hero-banner-container">
             <pre class="hero-banner">
-<span style="color:#ffffff">  ██╗   ██╗ ██████╗  ██████╗ █████╗ </span>
-<span style="color:#ffffd7">  ██║   ██║██╔═══██╗██╔════╝██╔══██╗</span>
-<span style="color:#ffffaf">  ██║   ██║██║   ██║██║     ███████║</span>
-<span style="color:#ffd75f">  ╚██╗ ██╔╝██║   ██║██║     ██╔══██║</span>
-<span style="color:#ffaf5f">   ╚████╔╝ ╚██████╔╝╚██████╗██║  ██║</span>
-<span style="color:#ff5f5f">    ╚═══╝   ╚═════╝  ╚═════╝╚═╝  ╚═╝</span></pre>
+<span style="color:#ffffff">__      ______   _____          </span>
+<span style="color:#ffffd7">\ \    / / __ \ / ____|   /\    </span>
+<span style="color:#ffffaf"> \ \  / / |  | | |       /  \   </span>
+<span style="color:#ffd75f">  \ \/ /| |  | | |      / /\ \  </span>
+<span style="color:#ffaf5f">   \  / | |__| | |____ / ____ \ </span>
+<span style="color:#ff5f5f">    \/   \____/ \_____/_/    \_\</span></pre>
         </div>
 
         <h1>Translation that stays<br><em>on your machine.</em></h1>
         <p class="hero-sub"><strong>voca</strong> is a local-first translation tool built for desktop and developer
-            workflows. Translate text, files, docs, and JSON using local LLMs with zero data leaving your machine.</p>
+            workflows. Translate text, files, docs, and JSON using local LLMs via Ollama or llama.cpp with zero data
+            leaving your machine.</p>
         <div class="hero-actions">
             <a href="#install"><button class="btn btn-primary">Get started</button></a>
             <a href="https://github.com/danterolle/voca" target="_blank" rel="noopener">
@@ -790,8 +791,9 @@
                 </div>
                 <div class="card">
                     <div class="card-icon">🤖</div>
-                    <h3>Model-agnostic</h3>
-                    <p>Use any LLM via Ollama: gemma, phi, qwen and more. Switch per-command or set a default in config.
+                    <h3>Dual backend</h3>
+                    <p>Works with Ollama or llama.cpp. Use any model: gemma, phi, qwen and more. Switch per-command or
+                        set a default in config.
                     </p>
                 </div>
             </div>
@@ -923,12 +925,22 @@
                     <div class="code-block">
                         <div class="code-hdr"><span>~/.config/voca/config.yaml</span></div>
                         <div class="code-body">
-                            <pre><span class="yk">backend</span>:
+                            <pre><span class="cm"># Ollama (default)</span>
+<span class="yk">backend</span>:
+  <span class="yk">type</span>: <span class="yv">ollama</span>
   <span class="yk">model</span>: <span class="yv">gemma4:e2b-it-qat</span>
   <span class="yk">base_url</span>: <span class="yv">http://localhost:11434</span>
   <span class="yk">options</span>:
     <span class="yk">temperature</span>: <span class="yn">0.0</span>
-    <span class="yk">num_predict</span>: <span class="yn">2048</span></pre>
+    <span class="yk">num_predict</span>: <span class="yn">2048</span>
+
+<span class="cm"># llama.cpp (auto-start with GGUF)</span>
+<span class="cm"># backend:</span>
+<span class="cm">#   type: llamacpp</span>
+<span class="cm">#   model: gemma-3-1b-it</span>
+<span class="cm">#   base_url: http://localhost:8080</span>
+<span class="cm">#   model_path: /path/to/model.gguf</span>
+<span class="cm">#   server_args: ["--ctx-size", "8192", "--ngl", "99"]</span></pre>
                         </div>
                     </div>
                 </div>
@@ -943,7 +955,8 @@
             <p class="sec-label">Installation</p>
             <h2>Up and running in seconds</h2>
             <p class="sec-sub">Requires Go 1.26+ and <a href="https://ollama.com" target="_blank"
-                    style="color:var(--acc2)">Ollama</a> with at least one model pulled.</p>
+                    style="color:var(--acc2)">Ollama</a> (default) or <a href="https://github.com/ggml-org/llama.cpp"
+                    target="_blank" style="color:var(--acc2)">llama.cpp</a> with a model loaded.</p>
             <div class="cols2">
                 <div>
                     <h3 style="margin-bottom:.7rem;font-size:.95rem;font-weight:600">Via go install</h3>
@@ -989,9 +1002,10 @@
                 </svg>
                 GitHub
             </a>
-            <a href="https://github.com/danterolle/voca/blob/main/BENCHMARKS.md" target="_blank">Benchmarks</a>
+            <a href="https://github.com/danterolle/voca/blob/main/docs/BENCHMARKS.md" target="_blank">Benchmarks</a>
             <a href="https://github.com/danterolle/voca/blob/main/LICENSE" target="_blank">Apache 2.0</a>
             <a href="https://ollama.com" target="_blank">Ollama</a>
+            <a href="https://github.com/ggml-org/llama.cpp" target="_blank">llama.cpp</a>
         </div>
         <p class="foot-muted">Built with Go and Bubbletea · Powered by local LLMs</p>
     </footer>

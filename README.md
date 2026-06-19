@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 [![Go Report Card](https://goreportcard.com/badge/github.com/danterolle/voca)](https://goreportcard.com/report/github.com/danterolle/voca)
 
-Local-first translation tool for desktop and developer workflows. Translate text, files, docs and structured content using local LLMs via [Ollama](https://ollama.com) or [llama.cpp](https://github.com/ggml-org/llama.cpp).
+An experimental, hackable local-first translation tool for desktop and developer workflows. Translate text, files, docs and structured content using local LLMs via [Ollama](https://ollama.com) or [llama.cpp](https://github.com/ggml-org/llama.cpp).
 
 **Why VOCA?** Every translation stays on your machine. No data sent to Google, DeepL or $whatever. Designed for desktop use via terminal, **not** for mobile. You can script it, pipe it and integrate it into your development workflow if needed.
 
