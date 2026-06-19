@@ -25,7 +25,7 @@ func RunBatch(cfg *config.Config, args []string) error {
 		fmt.Println(`  voca batch --from en --to it locales/en.json`)
 		fmt.Println(`  voca batch --from en --to fr README.md`)
 		fmt.Println(`  echo "Hello world" | voca batch --from en --to it`)
-		os.Exit(0)
+		return nil
 	}
 
 	if err := validateLangs(from, to); err != nil {

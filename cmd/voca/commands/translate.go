@@ -23,7 +23,7 @@ func RunTranslate(cfg *config.Config, args []string) error {
 		fmt.Println("Examples:")
 		fmt.Println(`  voca translate --from it --to en "Ciao mondo!"`)
 		fmt.Println("  voca translate --from en --to fr < README.md")
-		os.Exit(0)
+		return nil
 	}
 
 	if err := validateLangs(from, to); err != nil {
