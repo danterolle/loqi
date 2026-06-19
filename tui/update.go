@@ -44,7 +44,7 @@ func (m Model) handleDebounce(msg debounceMsg) (Model, tea.Cmd) {
 		return m, nil
 	}
 	m.leadingDone = false
-		text := m.textarea.Value()
+	text := m.textarea.Value()
 	if text == "" || m.output == text {
 		return m, nil
 	}
@@ -149,11 +149,12 @@ func (m Model) handleTextChange(msg tea.KeyMsg) (Model, tea.Cmd) {
 	m.textarea, cmd = m.textarea.Update(msg)
 	if m.textarea.Value() != before {
 		m.translateSeq++
-		seq := m.translateSeq
-		cmd = tea.Batch(cmd, tea.Tick(debounceDuration, func(t time.Time) tea.Msg {
-			return debounceMsg{seq: seq}
-		}))
-		if !m.leadingDone {
+		if m.leadingDone {
+			seq := m.translateSeq
+			cmd = tea.Batch(cmd, tea.Tick(debounceDuration, func(t time.Time) tea.Msg {
+				return debounceMsg{seq: seq}
+			}))
+		} else {
 			m.leadingDone = true
 			text := m.textarea.Value()
 			src := m.langCodes[m.srcIdx]
