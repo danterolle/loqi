@@ -61,71 +61,59 @@ func (t *jsonTranslator) processNode(ctx context.Context, val *any) {
 	}
 }
 
-func (t *jsonTranslator) processMapNode(ctx context.Context, v map[string]any) {
-	type entry struct {
-		key string
-		val any
-	}
-	entries := make([]entry, 0, len(v))
-	for k, child := range v {
-		entries = append(entries, entry{k, child})
-	}
-	if len(entries) == 0 {
+func (t *jsonTranslator) processItems(ctx context.Context, n int, fn func(i int)) {
+	if n == 0 {
 		return
 	}
-	ch := make(chan entry, len(entries))
-	for _, e := range entries {
-		ch <- e
+	ch := make(chan int, n)
+	for i := 0; i < n; i++ {
+		ch <- i
 	}
 	close(ch)
 
-	var mu sync.Mutex
 	var wg sync.WaitGroup
-	for i := 0; i < batchWorkers; i++ {
+	for w := 0; w < batchWorkers; w++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			for e := range ch {
-				childCopy := e.val
-				t.processNode(ctx, &childCopy)
+			for i := range ch {
+				fn(i)
 				if ctx.Err() != nil {
 					return
 				}
-				mu.Lock()
-				v[e.key] = childCopy
-				mu.Unlock()
 			}
 		}()
 	}
 	wg.Wait()
 }
 
-func (t *jsonTranslator) processSliceNode(ctx context.Context, v []any) {
-	if len(v) == 0 {
+func (t *jsonTranslator) processMapNode(ctx context.Context, v map[string]any) {
+	keys := make([]string, 0, len(v))
+	vals := make([]any, 0, len(v))
+	for k, val := range v {
+		keys = append(keys, k)
+		vals = append(vals, val)
+	}
+	if len(keys) == 0 {
 		return
 	}
-	ch := make(chan int, len(v))
-	for i := range v {
-		ch <- i
-	}
-	close(ch)
 
-	var wg sync.WaitGroup
-	for i := 0; i < batchWorkers; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			for idx := range ch {
-				childCopy := v[idx]
-				t.processNode(ctx, &childCopy)
-				if ctx.Err() != nil {
-					return
-				}
-				v[idx] = childCopy
-			}
-		}()
-	}
-	wg.Wait()
+	var mu sync.Mutex
+	t.processItems(ctx, len(keys), func(i int) {
+		childCopy := vals[i]
+		t.processNode(ctx, &childCopy)
+		mu.Lock()
+		v[keys[i]] = childCopy
+		mu.Unlock()
+	})
+}
+
+func (t *jsonTranslator) processSliceNode(ctx context.Context, v []any) {
+	t.processItems(ctx, len(v), func(i int) {
+		childCopy := v[i]
+		t.processNode(ctx, &childCopy)
+		v[i] = childCopy
+	})
 }
 
 func (t *jsonTranslator) translateString(ctx context.Context, val *any) {
