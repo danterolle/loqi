@@ -18,6 +18,7 @@ Local-first translation tool for desktop and developer workflows. Translate text
 - [CLI mode](#cli-mode-one-shot)
 - [Batch mode](#batch-mode)
 - [Benchmarks](#benchmarks)
+- [Technical documentation](#technical-documentation)
 - [License](#license)
 
 ## Installation
@@ -153,6 +154,10 @@ Auto-detects JSON (preserves structure, translates values) vs plain text (transl
 ## Benchmarks
 
 See [BENCHMARKS.md](BENCHMARKS.md) for multi-sentence translation quality and speed benchmarks across 6 models and 14 languages.
+
+## Technical documentation
+
+See [TECHNICAL.md](docs/TECHNICAL.md) for architecture, data flow, package details and design decisions.
 
 ## License
 
