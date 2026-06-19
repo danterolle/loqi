@@ -44,7 +44,7 @@ func SetupLlamaCpp(model, baseURL, modelPath string, serverArgs []string) (cmd *
 
 	started = true
 	if !llamacpp.WaitForModelReady(60, baseURL) {
-		_ = cmd.Process.Kill()
+		stopProcess(cmd)
 		return cmd, started, fmt.Errorf("timeout waiting for llama-server to load model")
 	}
 

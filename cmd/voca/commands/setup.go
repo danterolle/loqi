@@ -34,7 +34,7 @@ func setupOllama(cfg *config.Config, model string) (*translate.Core, func(), err
 		c := ollamaCmd
 		cleanup = func() {
 			ollama.UnloadModel(model, cfg.Backend.BaseURL)
-			_ = c.Process.Kill()
+			stopProcess(c)
 		}
 	} else {
 		cleanup = func() { ollama.UnloadModel(model, cfg.Backend.BaseURL) }
@@ -58,7 +58,7 @@ func setupLlamaCpp(cfg *config.Config, model string) (*translate.Core, func(), e
 	var cleanup func()
 	if started && llamaCmd != nil {
 		c := llamaCmd
-		cleanup = func() { _ = c.Process.Kill() }
+		cleanup = func() { stopProcess(c) }
 	} else {
 		cleanup = func() {}
 	}

@@ -20,9 +20,7 @@ func SetupOllama(model, baseURL string) (cmd *exec.Cmd, started bool, err error)
 		}
 		started = true
 		if !ollama.WaitForReady(30, baseURL) {
-			if cmd.Process != nil {
-				_ = cmd.Process.Kill()
-			}
+			stopProcess(cmd)
 			return nil, started, fmt.Errorf("timeout waiting for Ollama to start")
 		}
 		logDiag("online\n")
@@ -31,9 +29,7 @@ func SetupOllama(model, baseURL string) (cmd *exec.Cmd, started bool, err error)
 	if !ollama.ModelExists(model, baseURL) {
 		logDiag("  ◆ Pulling %s...\n", model)
 		if err := ollama.PullModel(model, baseURL); err != nil {
-			if started && cmd != nil {
-				_ = cmd.Process.Kill()
-			}
+			stopProcess(cmd)
 			return nil, started, fmt.Errorf("pull failed: %w", err)
 		}
 		logDiag("  ◆ Model ready\n")
