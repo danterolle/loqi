@@ -61,7 +61,8 @@ func PullModel(model string) error {
 		return fmt.Errorf("ollama pull: encode body: %w", err)
 	}
 
-	resp, err := httpClient.Post(apiBase+"/api/pull", "application/json", strings.NewReader(buf.String()))
+	pullClient := &http.Client{}
+	resp, err := pullClient.Post(apiBase+"/api/pull", "application/json", strings.NewReader(buf.String()))
 	if err != nil {
 		return fmt.Errorf("ollama pull: %w", err)
 	}
