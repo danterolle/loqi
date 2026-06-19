@@ -46,7 +46,6 @@ func RunBatch(cfg *config.Config, args []string) error {
 		return err
 	}
 
-	os.Stdout.Write(output)
-	fmt.Println()
+	fmt.Println(string(output))
 	return nil
 }
