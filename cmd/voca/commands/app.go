@@ -14,27 +14,24 @@ const defaultFrom = "auto"
 const defaultTo = "en"
 
 func Run(cfg *config.Config, args []string) {
-	var err error
 	if len(args) > 1 {
 		switch args[1] {
 		case "translate":
-			err = RunTranslate(cfg, args[2:])
+			if err := RunTranslate(cfg, args[2:]); err != nil {
+				Fatal(err)
+			}
+			return
 		case "batch":
-			err = RunBatch(cfg, args[2:])
+			if err := RunBatch(cfg, args[2:]); err != nil {
+				Fatal(err)
+			}
+			return
 		case "-h", "--help":
 			PrintUsage()
 			return
-		default:
-			RunTUI(cfg, args[1:])
-			return
 		}
-	} else {
-		RunTUI(cfg, args[1:])
-		return
 	}
-	if err != nil {
-		Fatal(err)
-	}
+	RunTUI(cfg, args[1:])
 }
 
 func PrintUsage() {
