@@ -41,18 +41,10 @@ func setupOllama(cfg *config.Config, model string) (*translate.Core, func(), err
 	}
 
 	backend := ollama.NewBackend(cfg.Backend.BaseURL, model, translate.NewDefaultPrompt())
-	if np, ok := readFloatOption(cfg.Backend.Options, "num_predict"); ok {
-		backend.NumPredict = int(np)
-	}
-	if to, ok := readFloatOption(cfg.Backend.Options, "timeout"); ok {
-		backend.Client.Timeout = time.Duration(to) * time.Second
-	}
-	if t, ok := readFloatOption(cfg.Backend.Options, "temperature"); ok {
-		backend.Temperature = t
-	}
-	if p, ok := readFloatOption(cfg.Backend.Options, "top_p"); ok {
-		backend.TopP = p
-	}
+	backend.NumPredict = intOption(cfg.Backend.Options, "num_predict", 2048)
+	backend.Client.Timeout = durationOption(cfg.Backend.Options, "timeout", 2*time.Minute)
+	backend.Temperature = floatOption(cfg.Backend.Options, "temperature", 0.0)
+	backend.TopP = floatOption(cfg.Backend.Options, "top_p", 1.0)
 
 	return translate.NewCore(backend, translate.NewStaticLanguages()), cleanup, nil
 }
@@ -72,18 +64,10 @@ func setupLlamaCpp(cfg *config.Config, model string) (*translate.Core, func(), e
 	}
 
 	backend := llamacpp.NewBackend(cfg.Backend.BaseURL, model, translate.NewDefaultPrompt())
-	if mt, ok := readFloatOption(cfg.Backend.Options, "num_predict"); ok {
-		backend.MaxTokens = int(mt)
-	}
-	if to, ok := readFloatOption(cfg.Backend.Options, "timeout"); ok {
-		backend.Client.Timeout = time.Duration(to) * time.Second
-	}
-	if t, ok := readFloatOption(cfg.Backend.Options, "temperature"); ok {
-		backend.Temperature = t
-	}
-	if p, ok := readFloatOption(cfg.Backend.Options, "top_p"); ok {
-		backend.TopP = p
-	}
+	backend.MaxTokens = intOption(cfg.Backend.Options, "num_predict", 2048)
+	backend.Client.Timeout = durationOption(cfg.Backend.Options, "timeout", 2*time.Minute)
+	backend.Temperature = floatOption(cfg.Backend.Options, "temperature", 0.0)
+	backend.TopP = floatOption(cfg.Backend.Options, "top_p", 1.0)
 
 	return translate.NewCore(backend, translate.NewStaticLanguages()), cleanup, nil
 }
@@ -100,4 +84,28 @@ func readFloatOption(options map[string]any, key string) (float64, bool) {
 		return float64(n), true
 	}
 	return 0, false
+}
+
+func intOption(options map[string]any, key string, defaultVal int) int {
+	v, ok := readFloatOption(options, key)
+	if !ok {
+		return defaultVal
+	}
+	return int(v)
+}
+
+func floatOption(options map[string]any, key string, defaultVal float64) float64 {
+	v, ok := readFloatOption(options, key)
+	if !ok {
+		return defaultVal
+	}
+	return v
+}
+
+func durationOption(options map[string]any, key string, defaultVal time.Duration) time.Duration {
+	v, ok := readFloatOption(options, key)
+	if !ok {
+		return defaultVal
+	}
+	return time.Duration(v) * time.Second
 }
