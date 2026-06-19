@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/danterolle/voca/config"
-	"github.com/danterolle/voca/tui"
+	"github.com/danterolle/voca/translate"
 )
 
 func RunTranslate(cfg *config.Config, args []string) error {
@@ -39,8 +39,17 @@ func RunTranslate(cfg *config.Config, args []string) error {
 		return err
 	}
 	defer cleanup()
-	if err := tui.RunCLI(context.Background(), core, from, to, text); err != nil {
+	if err := RunCLI(context.Background(), core, from, to, text); err != nil {
 		return err
 	}
+	return nil
+}
+
+func RunCLI(ctx context.Context, core *translate.Core, source, target, text string) error {
+	result, err := core.Translate(ctx, text, source, target)
+	if err != nil {
+		return err
+	}
+	fmt.Println(result)
 	return nil
 }
