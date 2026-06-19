@@ -6,7 +6,18 @@
 
 Local-first translation tool for desktop and developer workflows. Translate text, files, docs, and structured content using local LLMs via [Ollama](https://ollama.com) or [llama.cpp](https://github.com/ggml-org/llama.cpp).
 
-**Why VOCA?** Every translation stays on your machine. No data sent to Google, DeepL or $whatever. Designed for desktop and terminal, **not** for mobile. You can script it, pipe it and integrate it into your development workflow. Replaces manual copy-pasting to DeepL/Google Translate when working on text, documentation, code or sensitive documents.
+```
+  ██╗   ██╗ ██████╗  ██████╗ █████╗ 
+  ██║   ██║██╔═══██╗██╔════╝██╔══██╗
+  ██║   ██║██║   ██║██║     ███████║
+  ╚██╗ ██╔╝██║   ██║██║     ██╔══██║
+   ╚████╔╝ ╚██████╔╝╚██████╗██║  ██║
+    ╚═══╝   ╚═════╝  ╚═════╝╚═╝  ╚═╝
+```
+
+**Why VOCA?** Every translation stays on your machine. No data sent to Google, DeepL or $whatever. Designed for desktop and terminal, **not** for mobile. You can script it, pipe it and integrate it into your development workflow if needed.
+
+In development the _lingua franca_ is English — it has been my working language throughout my career. This tool is also a way to learn: to see whether a small model (Gemma 1b/2b/4b/others) can handle some real translation work well enough to make me a little less dependent on big corporations. And maybe it'll be useful to others too, not just to people who call themselves programmers.
 
 ---
 

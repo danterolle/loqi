@@ -47,6 +47,10 @@ func PrintUsage() {
 	fmt.Println("━━━ Global flags ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 	fmt.Println("  --config <path>    Path to config file")
 	fmt.Println()
+	fmt.Println("━━━ Backends ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+	fmt.Println("  Supports Ollama (default) and llama.cpp.")
+	fmt.Println("  Set backend.type in config: ollama | llamacpp")
+	fmt.Println()
 	fmt.Println("━━━ Translate / Batch flags ━━━━━━━━━━━━━━━━━━━━━")
 	fmt.Printf("  --from  string    Source language code (default %q)\n", defaultFrom)
 	fmt.Printf("  --to    string    Target language code (default %q)\n", defaultTo)
@@ -55,6 +59,9 @@ func PrintUsage() {
 	fmt.Println("━━━ Examples ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 	fmt.Println(`  voca translate --from it --to en "Ciao mondo!"`)
 	fmt.Println("  voca batch --from en --to it < locales/en.json")
+	fmt.Println(`  voca --config config.yaml translate --from en --to it "Hello"`)
+	fmt.Println()
+	fmt.Println("  # See config.yaml for llama.cpp backend setup (type: llamacpp)")
 }
 
 func Fatal(err error) {
