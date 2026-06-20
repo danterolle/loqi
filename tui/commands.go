@@ -12,6 +12,7 @@ func (m Model) doTranslate(text, source, target string) tea.Cmd {
 	}
 }
 
+// TODO: escalate clipboard errors to the user more visibly sinc status line is easy to miss
 func copyClipboard(text string) error {
 	return clipboard.WriteAll(text)
 }

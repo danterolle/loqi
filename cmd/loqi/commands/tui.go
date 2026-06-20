@@ -33,6 +33,7 @@ func RunTUI(cfg *config.Config, args []string) error {
 	defer cleanup()
 
 	logDiag("\n  Starting TUI...")
+	// FIXME: hardcoded delay, perhaps it's too short for slow models and too long for fast ones.
 	time.Sleep(800 * time.Millisecond)
 	logDiag("\n")
 

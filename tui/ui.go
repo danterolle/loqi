@@ -13,6 +13,7 @@ func RunBubbleTea(ctx context.Context, backend translate.Backend, langs translat
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("panic: %v", r)
+			// FIXME: log stack trace before recovering?
 		}
 	}()
 

@@ -76,6 +76,7 @@ func PullModel(model, baseURL string) error {
 			Completed int64  `json:"completed,omitempty"`
 		}
 		if err := json.Unmarshal(scanner.Bytes(), &s); err != nil {
+			// FIXME: writes directly to os.Stderr so the --quiet flag has no effect on pull progress
 			fmt.Fprintf(os.Stderr, "  ⚠ ollama pull: skip malformed line: %v\n", err)
 			continue
 		}

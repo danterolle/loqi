@@ -13,12 +13,12 @@ func main() {
 	cfg, err := config.Load(cfgPath)
 	if err != nil {
 		commands.Fatal(err)
-		os.Exit(1)
+		os.Exit(1) // TODO: return error instead of os.Exit to allow deferred cleanup
 	}
 
 	if err := commands.Run(cfg, args); err != nil {
 		commands.Fatal(err)
-		os.Exit(1)
+		os.Exit(1) // TODO: same as mentioned above
 	}
 }
 

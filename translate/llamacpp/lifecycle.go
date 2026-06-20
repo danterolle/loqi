@@ -16,6 +16,7 @@ func ServerRunning(baseURL string) bool {
 	return true
 }
 
+// FIXME: reuses the package-level httpClient in ServerRunning but creates a new one here.
 func WaitForModelReady(seconds int, baseURL string) bool {
 	client := &http.Client{Timeout: 2 * time.Second}
 	for i := 0; i < seconds; i++ {
