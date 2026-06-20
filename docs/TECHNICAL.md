@@ -2,11 +2,9 @@
 
 Loqi is a terminal-based translator that runs locally through LLMs. It supports two backends: **Ollama** (default) and **llama.cpp**. It works in three modes: an interactive TUI built with bubbletea, a `loqi translate` command for one-shot translations, and `loqi batch` for bulk-translating JSON or plain text files.
 
-The entire codebase is Go with only five external dependencies (bubbletea, bubbles, lipgloss, yaml, atotto/clipboard).
+The entire codebase is Go with only five external dependencies: bubbletea, bubbles, lipgloss, yaml, atotto/clipboard.
 
 ## Package Structure
-
-Eight packages (plus `cmd/bench`) with a linear dependency graph — no cycles:
 
 ```
 cmd/loqi/main.go
@@ -123,30 +121,33 @@ parseTranslateFlags ──► ReadInput (text, file or stdin)
                           setup.SetupRun(cfg, model, logDiag, printBanner)
                               │
                               ├── printBanner()
+                              │
                               ├── switch cfg.Backend.Type:
                               │     ollama  ──► setup.SetupOllama()
                               │                   ├── Reachable? ──► no ──► start ollama serve
                               │                   │                      ──► WaitForReady(30s)
                               │                   ├── ModelExists? ──► no ──► PullModel
                               │                   └── return cmd handle
+                              │
                               │     llamacpp ──► setup.SetupLlamaCpp()
                               │                    ├── ServerRunning? ──► yes ──► wait for model
                               │                    ├── no + model_path? ──► start llama-server
                               │                    └── return cmd handle
+                              │           
                               ├── build backend with config options
                               └── return *Core + cleanup()
-                             │
-                             ▼
-                    signal.NotifyContext(SIGINT, SIGTERM)
-                             │
-                             ▼
-                         RunCLI(ctx, core, from, to, text)
-                             │
-                             ▼
-                         core.Translate ──► backend.Translate
-                             │
-                             ▼
-                         fmt.Println(result)
+`                             │
+                              ▼
+                     signal.NotifyContext(SIGINT, SIGTERM)
+                              │
+                              ▼
+                    RunCLI(ctx, core, from, to, text)
+                              │
+                              ▼
+                     core.Translate ──► backend.Translate
+                              │
+                              ▼
+                      fmt.Println(result)`
 ```
 
 The signal context ensures that if the user presses CTRL+C while translating, the deferred `cleanup()` runs — which kills the subprocess only if Loqi started it. This distinction matters: if the backend was already running when Loqi launched, cleanup is a no-op.
@@ -178,6 +179,7 @@ Input bytes
     │       │                                  │
     │       │                                  ▼
     │       │                                result
+    │       │
     │       │
     │       └── no ──► core.Translate(ctx, text, from, to)
     │                                  │
@@ -246,9 +248,9 @@ Options from `backend.options` are read as `map[string]any` and applied to the b
 `SetupOllama` in `translate/setup/server.go` coordinates three checks:
 
 ```
-exec.LookPath("ollama")           ──► error if not installed
+exec.LookPath("ollama")       ──► error if not installed
     │
-ollama.Reachable(baseURL)         ──► GET /api/tags with 2s timeout
+ollama.Reachable(baseURL)     ──► GET /api/tags with 2s timeout
     │
     ├── reachable ──► skip start
     │
@@ -289,6 +291,7 @@ llamacpp.ServerRunning(baseURL)   ──► GET /v1/models
     │                                        "--host", host,
     │                                        "--port", port,
     │                                        server_args...)
+    │
     │                                      WaitForModelReady(60s)
     │                                      return (kill on cleanup)
     │
@@ -314,13 +317,13 @@ There is no runtime `git describe` call — it would fail in distributed binarie
 
 ## Test Strategy
 
-`translate.MockBackend` implements `translate.Backend` with a replaceable `TranslateFunc` field, defaulting to `"[source->target] text"`. This lets the batch tests verify JSON tree walking, structure preservation, non-string passthrough, and error propagation without any HTTP calls.
+`translate.MockBackend` implements `translate.Backend` with a replaceable `TranslateFunc` field, defaulting to `"[source->target] text"`. Batch tests use it to verify JSON tree walking, structure preservation, non-string passthrough, and error propagation without real HTTP calls. Interface compliance is enforced at compile time with `var _ Backend = (*MockBackend)(nil)`.
 
-Config tests verify defaults, file loading, partial overrides, and YAML parse errors. Interface compliance is checked at compile time with package-level `var _ Backend = (*MockBackend)(nil)` assertions.
+Config tests validate defaults, file loading, partial overrides, and YAML parse errors.
 
-The `tui` package has View-based tests that verify user-observable behavior: translation result appears in output, stale results do not overwrite newer output, errors preserve output and show error status, Ctrl+L clears input and output, and Tab switches focus to language list. All tests go through Bubble Tea's `Update()` message loop rather than calling internal methods.
+The `tui` package has View-based tests that go through Bubble Tea's `Update()` message loop rather than calling internal methods. They verify that translation results render, stale data does not overwrite, errors show the right status while preserving output, and shortcuts like Ctrl+L and Tab work correctly.
 
-There is no test coverage for the `commands` package.
+The `commands` package has **no** test coverage.
 
 ## Known Limitations
 
