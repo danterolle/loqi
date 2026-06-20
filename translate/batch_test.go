@@ -64,7 +64,7 @@ func TestBatch_FromFixture(t *testing.T) {
 	// Verify flat: all string leaf values were translated
 	m := got.(map[string]any)
 	app := m["app"].(map[string]any)
-	if app["title"] != "[en->it] Welcome to Voca" {
+	if app["title"] != "[en->it] Welcome to Loqi" {
 		t.Fatalf("expected translated title, got %q", app["title"])
 	}
 	// Verify non-string leaf values preserved
