@@ -3,6 +3,8 @@ package commands
 import (
 	"fmt"
 	"os"
+
+	"github.com/charmbracelet/lipgloss"
 )
 
 func printBanner(quiet bool) {
@@ -10,19 +12,10 @@ func printBanner(quiet bool) {
 		return
 	}
 
-	stderr := func(format string, args ...any) { fmt.Fprintf(os.Stderr, format, args...) }
-
-	gradient := []string{
-		"\033[38;5;255m",
-		"\033[38;5;230m",
-		"\033[38;5;229m",
-		"\033[38;5;227m",
-		"\033[38;5;221m",
-		"\033[38;5;215m",
-		"\033[38;5;209m",
-		"\033[38;5;203m",
+	colors := []lipgloss.Color{
+		"255", "230", "229", "227", "221", "215", "209", "203",
 	}
-	reset := "\033[0m"
+	accent := lipgloss.NewStyle().Foreground(lipgloss.Color("203"))
 
 	lines := []string{
 		"dP                   oo",
@@ -35,18 +28,18 @@ func printBanner(quiet bool) {
 		"                  dP    ",
 	}
 
-	stderr("\n")
+	fmt.Fprintln(os.Stderr)
 	for i, line := range lines {
-		if i < len(gradient) {
-			stderr("%s%s%s\n", gradient[i], line, reset)
-		} else {
-			stderr("%s%s%s\n", gradient[len(gradient)-1], line, reset)
+		c := colors[i]
+		if i >= len(colors) {
+			c = colors[len(colors)-1]
 		}
+		fmt.Fprintln(os.Stderr, lipgloss.NewStyle().Foreground(c).Render(line))
 	}
-	stderr("\n")
+	fmt.Fprintln(os.Stderr)
 	if Version != "" {
-		stderr("\033[1;38;5;203m       %s%s\n", Version, reset)
+		fmt.Fprintln(os.Stderr, "       "+accent.Bold(true).Render(Version))
 	}
-	stderr("   \033[38;5;203mLOcal Quiet Interpreter%s\n", reset)
-	stderr("\n")
+	fmt.Fprintln(os.Stderr, "   "+accent.Render("LOcal Quiet Interpreter"))
+	fmt.Fprintln(os.Stderr)
 }
