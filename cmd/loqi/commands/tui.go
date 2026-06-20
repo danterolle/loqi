@@ -3,6 +3,8 @@ package commands
 import (
 	"context"
 	"flag"
+	"fmt"
+	"os"
 	"os/signal"
 	"syscall"
 	"time"
@@ -20,16 +22,18 @@ func RunTUI(cfg *config.Config, args []string) error {
 		return err
 	}
 
-	core, cleanup, err := setup.SetupRun(cfg, model, logDiag, printBanner)
+	logDiag := func(format string, args ...any) {
+		fmt.Fprintf(os.Stderr, format, args...)
+	}
+
+	core, cleanup, err := setup.SetupRun(cfg, model, logDiag, func() { printBanner(false) })
 	if err != nil {
 		return err
 	}
 	defer cleanup()
 
 	logDiag("\n  Starting TUI...")
-	if !Quiet {
-		time.Sleep(800 * time.Millisecond)
-	}
+	time.Sleep(800 * time.Millisecond)
 	logDiag("\n")
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)

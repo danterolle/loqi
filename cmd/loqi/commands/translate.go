@@ -13,13 +13,19 @@ import (
 )
 
 func RunTranslate(cfg *config.Config, args []string) error {
-	model, from, to, fs, h, help, err := parseTranslateFlags("translate", args, cfg.Backend.Model)
+	model, from, to, fs, h, help, quiet, err := parseTranslateFlags("translate", args, cfg.Backend.Model)
 	if err != nil {
 		return err
 	}
 
+	logDiag := func(format string, args ...any) {
+		if !quiet {
+			fmt.Fprintf(os.Stderr, format, args...)
+		}
+	}
+
 	if *h || *help {
-		printBanner()
+		printBanner(quiet)
 		fmt.Println("Usage: loqi translate [flags] <text|file>")
 		fmt.Println()
 		fs.PrintDefaults()
@@ -44,7 +50,7 @@ func RunTranslate(cfg *config.Config, args []string) error {
 		return fmt.Errorf("no input text or file provided")
 	}
 
-	core, cleanup, err := setup.SetupRun(cfg, model, logDiag, printBanner)
+	core, cleanup, err := setup.SetupRun(cfg, model, logDiag, func() { printBanner(quiet) })
 	if err != nil {
 		return err
 	}

@@ -10,7 +10,6 @@ import (
 )
 
 var Version string
-var Quiet bool
 
 const defaultFrom = "auto"
 const defaultTo = "en"
@@ -37,7 +36,7 @@ func Run(cfg *config.Config, args []string) error {
 }
 
 func PrintUsage() {
-	printBanner()
+	printBanner(false)
 	cfg := config.Default()
 
 	fmt.Println("━━━ Usage ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
@@ -68,12 +67,6 @@ func PrintUsage() {
 	fmt.Println("  # See config.yaml for llama.cpp backend setup (type: llamacpp)")
 }
 
-func logDiag(format string, args ...any) {
-	if !Quiet {
-		fmt.Fprintf(os.Stderr, format, args...)
-	}
-}
-
 func Fatal(err error) {
 	fmt.Fprintf(os.Stderr, "  ✖ Error: %v\n", err)
 }
@@ -91,17 +84,16 @@ func validateLangs(from, to string) error {
 	return nil
 }
 
-func parseTranslateFlags(name string, args []string, defaultModel string) (model, from, to string, fs *flag.FlagSet, h, help *bool, err error) {
+func parseTranslateFlags(name string, args []string, defaultModel string) (model, from, to string, fs *flag.FlagSet, h, help *bool, quiet bool, err error) {
 	model = defaultModel
 	from = defaultFrom
 	to = defaultTo
-	Quiet = false
 
 	fs = flag.NewFlagSet(name, flag.ContinueOnError)
 	fs.StringVar(&model, "model", model, "translation model")
 	fs.StringVar(&from, "from", from, "source language code")
 	fs.StringVar(&to, "to", to, "target language code")
-	fs.BoolVar(&Quiet, "quiet", false, "suppress diagnostic output")
+	fs.BoolVar(&quiet, "quiet", false, "suppress diagnostic output")
 	h = fs.Bool("h", false, "show help")
 	help = fs.Bool("help", false, "show help")
 	err = fs.Parse(args)

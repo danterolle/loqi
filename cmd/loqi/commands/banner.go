@@ -1,9 +1,16 @@
 package commands
 
-func printBanner() {
-	if Quiet {
+import (
+	"fmt"
+	"os"
+)
+
+func printBanner(quiet bool) {
+	if quiet {
 		return
 	}
+
+	stderr := func(format string, args ...any) { fmt.Fprintf(os.Stderr, format, args...) }
 
 	gradient := []string{
 		"\033[38;5;255m",
@@ -28,18 +35,18 @@ func printBanner() {
 		"                  dP    ",
 	}
 
-	logDiag("\n")
+	stderr("\n")
 	for i, line := range lines {
 		if i < len(gradient) {
-			logDiag("%s%s%s\n", gradient[i], line, reset)
+			stderr("%s%s%s\n", gradient[i], line, reset)
 		} else {
-			logDiag("%s%s%s\n", gradient[len(gradient)-1], line, reset)
+			stderr("%s%s%s\n", gradient[len(gradient)-1], line, reset)
 		}
 	}
-	logDiag("\n")
+	stderr("\n")
 	if Version != "" {
-		logDiag("\033[1;38;5;203m       %s%s\n", Version, reset)
+		stderr("\033[1;38;5;203m       %s%s\n", Version, reset)
 	}
-	logDiag("   \033[38;5;203mLOcal Quiet Interpreter%s\n", reset)
-	logDiag("\n")
+	stderr("   \033[38;5;203mLOcal Quiet Interpreter%s\n", reset)
+	stderr("\n")
 }

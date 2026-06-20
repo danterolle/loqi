@@ -13,13 +13,19 @@ import (
 )
 
 func RunBatch(cfg *config.Config, args []string) error {
-	model, from, to, fs, h, help, err := parseTranslateFlags("batch", args, cfg.Backend.Model)
+	model, from, to, fs, h, help, quiet, err := parseTranslateFlags("batch", args, cfg.Backend.Model)
 	if err != nil {
 		return err
 	}
 
+	logDiag := func(format string, args ...any) {
+		if !quiet {
+			fmt.Fprintf(os.Stderr, format, args...)
+		}
+	}
+
 	if *h || *help {
-		printBanner()
+		printBanner(quiet)
 		fmt.Println("Usage: loqi batch [flags] [file]")
 		fmt.Println()
 		fs.PrintDefaults()
@@ -46,7 +52,7 @@ func RunBatch(cfg *config.Config, args []string) error {
 		return fmt.Errorf("no input: specify a file or pipe data to stdin")
 	}
 
-	core, cleanup, err := setup.SetupRun(cfg, model, logDiag, printBanner)
+	core, cleanup, err := setup.SetupRun(cfg, model, logDiag, func() { printBanner(quiet) })
 	if err != nil {
 		return err
 	}
