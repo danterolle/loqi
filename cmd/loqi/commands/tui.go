@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/danterolle/loqi/config"
+	"github.com/danterolle/loqi/translate/setup"
 	"github.com/danterolle/loqi/tui"
 )
 
@@ -17,7 +18,7 @@ func RunTUI(cfg *config.Config, args []string) error {
 	fs.StringVar(&model, "model", model, "translation model")
 	fs.Parse(args)
 
-	core, cleanup, err := SetupRun(cfg, model)
+	core, cleanup, err := setup.SetupRun(cfg, model, logDiag, printBanner)
 	if err != nil {
 		return err
 	}

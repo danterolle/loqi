@@ -9,6 +9,7 @@ import (
 
 	"github.com/danterolle/loqi/config"
 	"github.com/danterolle/loqi/translate"
+	"github.com/danterolle/loqi/translate/setup"
 )
 
 func RunTranslate(cfg *config.Config, args []string) error {
@@ -40,7 +41,7 @@ func RunTranslate(cfg *config.Config, args []string) error {
 		return fmt.Errorf("no input text or file provided")
 	}
 
-	core, cleanup, err := SetupRun(cfg, model)
+	core, cleanup, err := setup.SetupRun(cfg, model, logDiag, printBanner)
 	if err != nil {
 		return err
 	}

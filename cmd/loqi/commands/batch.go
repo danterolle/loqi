@@ -9,6 +9,7 @@ import (
 
 	"github.com/danterolle/loqi/config"
 	"github.com/danterolle/loqi/translate"
+	"github.com/danterolle/loqi/translate/setup"
 )
 
 func RunBatch(cfg *config.Config, args []string) error {
@@ -42,7 +43,7 @@ func RunBatch(cfg *config.Config, args []string) error {
 		return fmt.Errorf("no input: specify a file or pipe data to stdin")
 	}
 
-	core, cleanup, err := SetupRun(cfg, model)
+	core, cleanup, err := setup.SetupRun(cfg, model, logDiag, printBanner)
 	if err != nil {
 		return err
 	}
