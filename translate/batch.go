@@ -7,13 +7,13 @@ import (
 	"strings"
 )
 
-func Batch(ctx context.Context, core *Translator, input []byte, from, to string) ([]byte, error) {
+func Batch(ctx context.Context, tr *Translator, input []byte, from, to string) ([]byte, error) {
 	if json.Valid(input) {
 		var data any
 		if err := json.Unmarshal(input, &data); err != nil {
 			return nil, fmt.Errorf("invalid JSON: %w", err)
 		}
-		if err := translateJSON(ctx, core, &data, from, to); err != nil {
+		if err := translateJSON(ctx, tr, &data, from, to); err != nil {
 			return nil, err
 		}
 		return json.MarshalIndent(data, "", "  ")
@@ -24,7 +24,7 @@ func Batch(ctx context.Context, core *Translator, input []byte, from, to string)
 		return nil, fmt.Errorf("empty input")
 	}
 
-	result, err := core.Translate(ctx, text, from, to)
+	result, err := tr.Translate(ctx, text, from, to)
 	if err != nil {
 		return nil, err
 	}
