@@ -9,17 +9,22 @@ import (
 )
 
 func main() {
+	os.Exit(run())
+}
+
+func run() int {
 	cfgPath, args := extractConfig()
 	cfg, err := config.Load(cfgPath)
 	if err != nil {
 		commands.Fatal(err)
-		os.Exit(1) // TODO: return error instead of os.Exit to allow deferred cleanup
+		return 1
 	}
 
 	if err := commands.Run(cfg, args); err != nil {
 		commands.Fatal(err)
-		os.Exit(1) // TODO: same as mentioned above
+		return 1
 	}
+	return 0
 }
 
 func extractConfig() (string, []string) {
