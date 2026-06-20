@@ -3,6 +3,8 @@ package tui
 import (
 	"context"
 	"fmt"
+	"os"
+	"runtime/debug"
 
 	tea "github.com/charmbracelet/bubbletea"
 
@@ -12,8 +14,8 @@ import (
 func RunBubbleTea(ctx context.Context, backend translate.Backend, langs translate.LanguageProvider) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
+			fmt.Fprintf(os.Stderr, "panic: %v\n%s\n", r, debug.Stack())
 			err = fmt.Errorf("panic: %v", r)
-			// FIXME: log stack trace before recovering?
 		}
 	}()
 

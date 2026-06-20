@@ -39,7 +39,7 @@ func main() {
 	core, cleanup, err := setup.SetupRun(cfg, *model, logDiag, nil)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "setup error: %v\n", err)
-		os.Exit(1) // TODO: return error instead of os.Exit to allow deferred cleanup
+		os.Exit(1)
 	}
 	setupElapsed := time.Since(setupStart)
 	defer cleanup()

@@ -11,7 +11,6 @@ import (
 	httpclient "github.com/danterolle/loqi/translate/http"
 )
 
-// FIXME: duplicate interface. Identical promptBuilder also defined in translate/llamacpp/backend.go
 type promptBuilder interface {
 	System() string
 	Translate(text, source, target string) string
