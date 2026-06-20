@@ -17,9 +17,8 @@ func ServerRunning(baseURL string) bool {
 }
 
 func WaitForModelReady(seconds int, baseURL string) bool {
-	client := &http.Client{Timeout: 2 * time.Second}
 	for i := 0; i < seconds; i++ {
-		resp, err := client.Get(baseURL + "/v1/models")
+		resp, err := httpClient.Get(baseURL + "/v1/models")
 		if err == nil {
 			resp.Body.Close()
 			if resp.StatusCode == http.StatusOK {
