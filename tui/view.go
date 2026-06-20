@@ -126,7 +126,7 @@ func (m Model) languageListView() string {
 	return b.String()
 }
 
-// FIXME: strings.Fields splits on whitespace. CJK text without spaces will not wrap. 
+// FIXME: strings.Fields splits on whitespace. CJK text without spaces will not wrap.
 func wrap(s string, width int) string {
 	if width <= 0 {
 		return s
