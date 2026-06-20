@@ -6,13 +6,23 @@
 
 A tool for producing local translation drafts using LLMs via [Ollama](https://ollama.com) or [llama.cpp](https://github.com/ggml-org/llama.cpp). Translate text, files, docs and structured content entirely on your machine.
 
-**Why Loqi?** Every translation stays on your machine. No data sent to Google, DeepL or others. Designed for desktop use via terminal, **not** for mobile.
+**Why Loqi?** 
+
+As convenient as it is, and despite all the opt-out options and privacy policies, I generally believe it’s never ideal to send your data to Google or DeepL (and yes, like everyone else, I do it too). I started this project in an attempt to make myself a bit less dependent on these great technologies.
+
+Can a small-parameter LLM actually help me achieve this? It will never give me absolute certainty (unless a denser model is used, which probably wouldn't suit the purpose of this tool), but a traditional translation engine won't either, even though it would be much faster and more efficient.
+
+The right approach is probably a hybrid of both worlds, and it’s one of the things I’ll be working on in my spare time: using a small, local model (maybe Marian? We will see) as a fast default backend, and falling back to Gemma/Phi/Qwen only for ambiguous sentences or text with low estimated quality.
+
+This project is an experiment. There are several features that might make it interesting down the road, but at least for now, it meets my needs.
 
 Please note that translation quality depends on the model you choose and small models can really make mistakes so treat the output as a draft to review, *not as a guaranteed result*.
 
-This tool is also a way to learn: to see whether a small model (Gemma 1b/2b/4b/others) can handle some real translation work well enough to make me a little less dependent on big corporations. And maybe it'll be useful to others too, not just to people who call themselves programmers. Of course, you can use or download any template and use it solely for translation, and that would work just fine. This tool is designed specifically and solely to force the model to translate.
+Ah, of course you can use or download any model and use it solely for translation, and that would work just fine. This tool is designed specifically and solely to force the model to translate.
 
+And perhaps expanding the model's capabilities to handle data batches and more. 
 
+Read on if you're interested.
 
 ## Features Summary
 
