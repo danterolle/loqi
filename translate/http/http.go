@@ -1,7 +1,9 @@
 package httpclient
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -31,4 +33,30 @@ func DoTranslate(ctx context.Context, client *http.Client, req *http.Request, er
 		return nil, fmt.Errorf("%s: %s %s", errPrefix, resp.Status, strings.TrimSpace(string(body)))
 	}
 	return resp.Body, nil
+}
+
+func PostJSON(ctx context.Context, client *http.Client, url, errPrefix string, body any, extract func([]byte) (string, error)) (string, error) {
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(body); err != nil {
+		return "", fmt.Errorf("%s: encode: %w", errPrefix, err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, &buf)
+	if err != nil {
+		return "", fmt.Errorf("%s: request: %w", errPrefix, err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	respBody, err := DoTranslate(ctx, client, req, errPrefix)
+	if err != nil {
+		return "", err
+	}
+	defer respBody.Close()
+
+	data, err := io.ReadAll(respBody)
+	if err != nil {
+		return "", fmt.Errorf("%s: read: %w", errPrefix, err)
+	}
+
+	return extract(data)
 }

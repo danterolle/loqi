@@ -1,7 +1,6 @@
 package ollama
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -21,10 +20,6 @@ type chatRequest struct {
 	Messages []httpclient.Message `json:"messages"`
 	Stream   bool                 `json:"stream"`
 	Options  map[string]any       `json:"options"`
-}
-
-type chatResponse struct {
-	Message httpclient.Message `json:"message"`
 }
 
 type Backend struct {
@@ -54,26 +49,20 @@ func (b *Backend) Translate(ctx context.Context, text, source, target string) (s
 		return text, nil
 	}
 
-	req, err := b.buildRequest(ctx, text, source, target)
-	if err != nil {
-		return "", err
-	}
-
-	body, err := httpclient.DoTranslate(ctx, b.Client, req, "ollama")
-	if err != nil {
-		return "", err
-	}
-	defer body.Close()
-
-	var cr chatResponse
-	if err := json.NewDecoder(body).Decode(&cr); err != nil {
-		return "", fmt.Errorf("ollama: decode: %w", err)
-	}
-
-	return strings.TrimSpace(cr.Message.Content), nil
+	return httpclient.PostJSON(ctx, b.Client, b.BaseURL+"/api/chat", "ollama",
+		b.buildRequestBody(text, source, target),
+		func(data []byte) (string, error) {
+			var cr struct {
+				Message httpclient.Message `json:"message"`
+			}
+			if err := json.Unmarshal(data, &cr); err != nil {
+				return "", fmt.Errorf("ollama: decode: %w", err)
+			}
+			return strings.TrimSpace(cr.Message.Content), nil
+		})
 }
 
-func (b *Backend) buildRequest(ctx context.Context, text, source, target string) (*http.Request, error) {
+func (b *Backend) buildRequestBody(text, source, target string) chatRequest {
 	options := map[string]any{
 		"temperature": b.Temperature,
 		"top_p":       b.TopP,
@@ -82,7 +71,7 @@ func (b *Backend) buildRequest(ctx context.Context, text, source, target string)
 		options["num_predict"] = b.NumPredict
 	}
 
-	body := chatRequest{
+	return chatRequest{
 		Model: b.Model,
 		Messages: []httpclient.Message{
 			{Role: "system", Content: b.Prompt.System()},
@@ -91,16 +80,4 @@ func (b *Backend) buildRequest(ctx context.Context, text, source, target string)
 		Stream:  false,
 		Options: options,
 	}
-
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(body); err != nil {
-		return nil, fmt.Errorf("ollama: encode: %w", err)
-	}
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, b.BaseURL+"/api/chat", &buf)
-	if err != nil {
-		return nil, fmt.Errorf("ollama: request: %w", err)
-	}
-	req.Header.Set("Content-Type", "application/json")
-	return req, nil
 }
