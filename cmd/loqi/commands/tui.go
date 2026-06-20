@@ -3,11 +3,8 @@ package commands
 import (
 	"context"
 	"flag"
-	"fmt"
-	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/danterolle/loqi/config"
 	"github.com/danterolle/loqi/translate/setup"
@@ -22,19 +19,11 @@ func RunTUI(cfg *config.Config, args []string) error {
 		return err
 	}
 
-	logDiag := func(format string, args ...any) {
-		fmt.Fprintf(os.Stderr, format, args...)
-	}
-
-	core, cleanup, err := setup.SetupRun(cfg, model, logDiag, func() { printBanner(false) })
+	core, cleanup, err := setup.SetupRun(cfg, model, func(format string, args ...any) {}, func() { printBanner(false) })
 	if err != nil {
 		return err
 	}
 	defer cleanup()
-
-	logDiag("\n  Starting TUI...")
-	time.Sleep(800 * time.Millisecond)
-	logDiag("\n")
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
