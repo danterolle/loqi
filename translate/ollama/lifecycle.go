@@ -83,4 +83,3 @@ func PullModel(model, baseURL string) error {
 	}
 	return scanner.Err()
 }
-

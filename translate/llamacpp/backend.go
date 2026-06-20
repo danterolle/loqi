@@ -17,12 +17,12 @@ type promptBuilder interface {
 }
 
 type chatCompletionRequest struct {
-	Model       string              `json:"model"`
+	Model       string               `json:"model"`
 	Messages    []httpclient.Message `json:"messages"`
-	Temperature float64             `json:"temperature,omitempty"`
-	TopP        float64             `json:"top_p,omitempty"`
-	MaxTokens   int                 `json:"max_tokens,omitempty"`
-	Stream      bool                `json:"stream"`
+	Temperature float64              `json:"temperature,omitempty"`
+	TopP        float64              `json:"top_p,omitempty"`
+	MaxTokens   int                  `json:"max_tokens,omitempty"`
+	Stream      bool                 `json:"stream"`
 }
 
 type chatCompletionResponse struct {

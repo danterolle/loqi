@@ -66,5 +66,3 @@ func setupLlamaCpp(cfg *config.Config, model string) (*translate.Core, func(), e
 
 	return translate.NewCore(backend, translate.NewStaticLanguages()), cleanup, nil
 }
-
-

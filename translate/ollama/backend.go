@@ -17,10 +17,10 @@ type promptBuilder interface {
 }
 
 type chatRequest struct {
-	Model    string              `json:"model"`
+	Model    string               `json:"model"`
 	Messages []httpclient.Message `json:"messages"`
-	Stream   bool                `json:"stream"`
-	Options  map[string]any      `json:"options"`
+	Stream   bool                 `json:"stream"`
+	Options  map[string]any       `json:"options"`
 }
 
 type chatResponse struct {
