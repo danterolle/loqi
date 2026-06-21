@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 	"time"
 
 	httpclient "github.com/danterolle/loqi/translate/http"
@@ -66,6 +67,13 @@ func optionAsFloat64(options map[string]any, key string) (float64, bool) {
 		return n, true
 	case int:
 		return float64(n), true
+	case string:
+		f, err := strconv.ParseFloat(n, 64)
+		if err == nil {
+			return f, true
+		}
+		fmt.Fprintf(os.Stderr, "  ⚠ config: %q has invalid value %q; using default\n", key, n)
+		return 0, false
 	}
 	return 0, false
 }
