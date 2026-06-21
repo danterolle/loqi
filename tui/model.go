@@ -62,7 +62,10 @@ func newModel(ctx context.Context, backend translate.Backend, langs translate.La
 	list := langs.List()
 	codes := make([]string, len(list))
 	names := make(map[string]string, len(list))
-	sourceIdx, targetIdx := 0, 1
+	sourceIdx, targetIdx := 0, len(list)-1
+	if targetIdx < 0 {
+		targetIdx = 0
+	}
 	for i, l := range list {
 		codes[i] = l.Code
 		names[l.Code] = l.Name
