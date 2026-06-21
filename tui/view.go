@@ -3,6 +3,8 @@ package tui
 import (
 	"fmt"
 	"strings"
+
+	"github.com/mattn/go-runewidth"
 )
 
 func (m Model) View() string {
@@ -125,7 +127,7 @@ func wrap(s string, width int) string {
 	for _, line := range strings.Split(s, "\n") {
 		trimmed := strings.TrimLeft(line, " ")
 		prefix := line[:len(line)-len(trimmed)]
-		prefLen := len([]rune(prefix))
+		prefLen := runewidth.StringWidth(prefix)
 
 		words := strings.Fields(trimmed)
 		if len(words) == 0 {
@@ -136,7 +138,7 @@ func wrap(s string, width int) string {
 		n := prefLen
 		result.WriteString(prefix)
 		for _, w := range words {
-			wLen := len([]rune(w))
+			wLen := runewidth.StringWidth(w)
 			if n > prefLen && n+1+wLen > width {
 				result.WriteByte('\n')
 				result.WriteString(prefix)
@@ -149,13 +151,14 @@ func wrap(s string, width int) string {
 					n = prefLen
 				}
 				for _, r := range w {
-					if n >= width {
+					rw := runewidth.RuneWidth(r)
+					if n+rw > width {
 						result.WriteByte('\n')
 						result.WriteString(prefix)
 						n = prefLen
 					}
 					result.WriteRune(r)
-					n++
+					n += rw
 				}
 				continue
 			}

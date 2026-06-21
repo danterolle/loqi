@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/mattn/go-runewidth"
 
 	"github.com/danterolle/loqi/translate"
 )
@@ -109,5 +110,54 @@ func TestViewLanguageListAppearsOnTab(t *testing.T) {
 	}
 	if !strings.Contains(view, "auto") {
 		t.Fatal("language list should contain language codes")
+	}
+}
+
+func TestWrap_CJK_no_spaces(t *testing.T) {
+	input := "你好世界你好世界"
+	width := 10
+	got := wrap(input, width)
+	for _, line := range strings.Split(got, "\n") {
+		if runewidth.StringWidth(line) > width {
+			t.Fatalf("line %q has display width %d, exceeds %d", line, runewidth.StringWidth(line), width)
+		}
+	}
+	if runewidth.StringWidth(got) > runewidth.StringWidth(input) {
+		t.Fatal("wrapped output should not exceed input display width")
+	}
+}
+
+func TestWrap_CJK_with_spaces(t *testing.T) {
+	input := "你好 世界 你好 世界"
+	width := 8
+	got := wrap(input, width)
+	for _, line := range strings.Split(got, "\n") {
+		if runewidth.StringWidth(line) > width {
+			t.Fatalf("line %q has display width %d, exceeds %d", line, runewidth.StringWidth(line), width)
+		}
+	}
+}
+
+func TestWrap_ascii(t *testing.T) {
+	input := "hello world foo bar"
+	width := 10
+	got := wrap(input, width)
+	for _, line := range strings.Split(got, "\n") {
+		if len(line) > width {
+			t.Fatalf("line %q exceeds width %d", line, width)
+		}
+	}
+}
+
+func TestWrap_empty(t *testing.T) {
+	if got := wrap("", 10); got != "" {
+		t.Fatalf("expected empty, got %q", got)
+	}
+}
+
+func TestWrap_zero_width(t *testing.T) {
+	input := "hello"
+	if got := wrap(input, 0); got != input {
+		t.Fatalf("expected unchanged, got %q", got)
 	}
 }
