@@ -88,18 +88,35 @@ func validateLangs(from, to string) error {
 	return nil
 }
 
-func parseTranslateFlags(name string, args []string, defaultModel string) (model, from, to string, fs *flag.FlagSet, h, help *bool, quiet bool, err error) {
-	model = defaultModel
-	from = defaultFrom
-	to = defaultTo
+type translateFlags struct {
+	Model   string
+	From    string
+	To      string
+	Quiet   bool
+	Help    bool
+	FlagSet *flag.FlagSet
+}
 
-	fs = flag.NewFlagSet(name, flag.ContinueOnError)
-	fs.StringVar(&model, "model", model, "translation model")
-	fs.StringVar(&from, "from", from, "source language code")
-	fs.StringVar(&to, "to", to, "target language code")
-	fs.BoolVar(&quiet, "quiet", false, "suppress diagnostic output")
-	h = fs.Bool("h", false, "show help")
-	help = fs.Bool("help", false, "show help")
-	err = fs.Parse(args)
-	return
+func parseTranslateFlags(name string, args []string, defaultModel string) (*translateFlags, error) {
+	flags := &translateFlags{
+		Model: defaultModel,
+		From:  defaultFrom,
+		To:    defaultTo,
+	}
+
+	fs := flag.NewFlagSet(name, flag.ContinueOnError)
+	fs.StringVar(&flags.Model, "model", flags.Model, "translation model")
+	fs.StringVar(&flags.From, "from", flags.From, "source language code")
+	fs.StringVar(&flags.To, "to", flags.To, "target language code")
+	fs.BoolVar(&flags.Quiet, "quiet", false, "suppress diagnostic output")
+	h := fs.Bool("h", false, "show help")
+	help := fs.Bool("help", false, "show help")
+
+	if err := fs.Parse(args); err != nil {
+		return nil, err
+	}
+
+	flags.Help = *h || *help
+	flags.FlagSet = fs
+	return flags, nil
 }

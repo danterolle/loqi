@@ -13,22 +13,22 @@ import (
 )
 
 func RunTranslate(cfg *config.Config, args []string) error {
-	model, from, to, fs, h, help, quiet, err := parseTranslateFlags("translate", args, cfg.Backend.Model)
+	flags, err := parseTranslateFlags("translate", args, cfg.Backend.Model)
 	if err != nil {
 		return err
 	}
 
 	logDiag := func(format string, args ...any) {
-		if !quiet {
+		if !flags.Quiet {
 			fmt.Fprintf(os.Stderr, format, args...)
 		}
 	}
 
-	if *h || *help {
-		printBanner(quiet)
+	if flags.Help {
+		printBanner(flags.Quiet)
 		fmt.Println("Usage: loqi translate [flags] <text|file>")
 		fmt.Println()
-		fs.PrintDefaults()
+		flags.FlagSet.PrintDefaults()
 		fmt.Println()
 		fmt.Println("Examples:")
 		fmt.Println(`  loqi translate --from it --to en "Ciao mondo!"`)
@@ -36,21 +36,21 @@ func RunTranslate(cfg *config.Config, args []string) error {
 		return nil
 	}
 
-	if err := validateLangs(from, to); err != nil {
+	if err := validateLangs(flags.From, flags.To); err != nil {
 		return err
 	}
 
-	text, err := ReadInput(fs.Args())
+	text, err := ReadInput(flags.FlagSet.Args())
 	if err != nil {
 		return err
 	}
 	if text == "" {
 		fmt.Fprintf(os.Stderr, "Usage: loqi translate --from <lang> --to <lang> [text|file|stdin]\n")
-		fs.PrintDefaults()
+		flags.FlagSet.PrintDefaults()
 		return fmt.Errorf("no input text or file provided")
 	}
 
-	core, cleanup, err := setup.SetupRun(cfg, model, logDiag, func() { printBanner(quiet) })
+	core, cleanup, err := setup.SetupRun(cfg, flags.Model, logDiag, func() { printBanner(flags.Quiet) })
 	if err != nil {
 		return err
 	}
@@ -58,7 +58,7 @@ func RunTranslate(cfg *config.Config, args []string) error {
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
-	if err := RunCLI(ctx, core, from, to, text); err != nil {
+	if err := RunCLI(ctx, core, flags.From, flags.To, text); err != nil {
 		return err
 	}
 	return nil

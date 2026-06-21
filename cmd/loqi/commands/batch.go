@@ -13,22 +13,22 @@ import (
 )
 
 func RunBatch(cfg *config.Config, args []string) error {
-	model, from, to, fs, h, help, quiet, err := parseTranslateFlags("batch", args, cfg.Backend.Model)
+	flags, err := parseTranslateFlags("batch", args, cfg.Backend.Model)
 	if err != nil {
 		return err
 	}
 
 	logDiag := func(format string, args ...any) {
-		if !quiet {
+		if !flags.Quiet {
 			fmt.Fprintf(os.Stderr, format, args...)
 		}
 	}
 
-	if *h || *help {
-		printBanner(quiet)
+	if flags.Help {
+		printBanner(flags.Quiet)
 		fmt.Println("Usage: loqi batch [flags] [file]")
 		fmt.Println()
-		fs.PrintDefaults()
+		flags.FlagSet.PrintDefaults()
 		fmt.Println()
 		fmt.Println("Examples:")
 		fmt.Println(`  loqi batch --from en --to it < locales/en.json`)
@@ -38,21 +38,21 @@ func RunBatch(cfg *config.Config, args []string) error {
 		return nil
 	}
 
-	if err := validateLangs(from, to); err != nil {
+	if err := validateLangs(flags.From, flags.To); err != nil {
 		return err
 	}
 
-	input, err := ReadStdinOrFile(fs.Args())
+	input, err := ReadStdinOrFile(flags.FlagSet.Args())
 	if err != nil || input == nil {
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "  ✖ Error: %v\n", err)
 		}
 		fmt.Fprintf(os.Stderr, "Usage: loqi batch --from <lang> --to <lang> [file]\n")
-		fs.PrintDefaults()
+		flags.FlagSet.PrintDefaults()
 		return fmt.Errorf("no input: specify a file or pipe data to stdin")
 	}
 
-	core, cleanup, err := setup.SetupRun(cfg, model, logDiag, func() { printBanner(quiet) })
+	core, cleanup, err := setup.SetupRun(cfg, flags.Model, logDiag, func() { printBanner(flags.Quiet) })
 	if err != nil {
 		return err
 	}
@@ -60,7 +60,7 @@ func RunBatch(cfg *config.Config, args []string) error {
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
-	output, err := translate.Batch(ctx, core, input, from, to)
+	output, err := translate.Batch(ctx, core, input, flags.From, flags.To)
 	if err != nil {
 		return err
 	}
