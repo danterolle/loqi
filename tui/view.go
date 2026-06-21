@@ -132,34 +132,43 @@ func wrap(s string, width int) string {
 	}
 	var result strings.Builder
 	for _, line := range strings.Split(s, "\n") {
-		words := strings.Fields(line)
+		trimmed := strings.TrimLeft(line, " ")
+		prefix := line[:len(line)-len(trimmed)]
+		prefLen := len([]rune(prefix))
+
+		words := strings.Fields(trimmed)
 		if len(words) == 0 {
+			result.WriteString(line)
 			result.WriteByte('\n')
 			continue
 		}
-		n := 0
+		n := prefLen
+		result.WriteString(prefix)
 		for _, w := range words {
 			wLen := len([]rune(w))
-			if n > 0 && n+1+wLen > width {
+			if n > prefLen && n+1+wLen > width {
 				result.WriteByte('\n')
-				n = 0
+				result.WriteString(prefix)
+				n = prefLen
 			}
 			if wLen > width {
-				if n > 0 {
+				if n > prefLen {
 					result.WriteByte('\n')
-					n = 0
+					result.WriteString(prefix)
+					n = prefLen
 				}
 				for _, r := range w {
 					if n >= width {
 						result.WriteByte('\n')
-						n = 0
+						result.WriteString(prefix)
+						n = prefLen
 					}
 					result.WriteRune(r)
 					n++
 				}
 				continue
 			}
-			if n > 0 {
+			if n > prefLen {
 				result.WriteByte(' ')
 				n++
 			}
