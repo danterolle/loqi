@@ -58,13 +58,13 @@ func RunTranslate(cfg *config.Config, args []string) error {
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
-	if err := RunCLI(ctx, core, flags.From, flags.To, text); err != nil {
+	if err := runCLI(ctx, core, flags.From, flags.To, text); err != nil {
 		return err
 	}
 	return nil
 }
 
-func RunCLI(ctx context.Context, core *translate.Translator, source, target, text string) error {
+func runCLI(ctx context.Context, core *translate.Translator, source, target, text string) error {
 	result, err := core.Translate(ctx, text, source, target)
 	if err != nil {
 		return err

@@ -13,13 +13,15 @@ import (
 	"github.com/danterolle/loqi/translate/ollama"
 )
 
+const defaultMaxTokens = 2048
+
 func NewBackend(backendType, baseURL, model string, options map[string]any, prompt *chatPrompt) (Backend, error) {
 	config := httpclient.BackendConfig{
 		BaseURL:     baseURL,
 		Model:       model,
 		Prompt:      prompt,
 		Client:      httpclient.NewHTTPClient(),
-		MaxTokens:   intOption(options, "num_predict", 2048),
+		MaxTokens:   intOption(options, "num_predict", defaultMaxTokens),
 		Temperature: floatOption(options, "temperature", 0.0),
 		TopP:        floatOption(options, "top_p", 1.0),
 	}
