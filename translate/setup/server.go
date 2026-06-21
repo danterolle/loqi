@@ -11,6 +11,14 @@ import (
 	"github.com/danterolle/loqi/translate/ollama"
 )
 
+func StopProcess(cmd *exec.Cmd) {
+	if cmd == nil || cmd.Process == nil {
+		return
+	}
+	cmd.Process.Kill()
+	cmd.Wait()
+}
+
 func SetupOllama(model, baseURL string, diag DiagFunc) (cmd *exec.Cmd, started bool, err error) {
 	if !ollama.Reachable(context.Background(), baseURL) {
 		if _, err := exec.LookPath("ollama"); err != nil {
@@ -97,12 +105,4 @@ func SetupArgos(baseURL string, diag DiagFunc) (cmd *exec.Cmd, started bool, err
 	}
 	diag("  ◆ Online\n")
 	return cmd, true, nil
-}
-
-func StopProcess(cmd *exec.Cmd) {
-	if cmd == nil || cmd.Process == nil {
-		return
-	}
-	cmd.Process.Kill()
-	cmd.Wait()
 }

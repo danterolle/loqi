@@ -3,6 +3,7 @@ package argos
 import (
 	_ "embed"
 	"fmt"
+	"io"
 	"net"
 	"net/url"
 	"os"
@@ -106,7 +107,7 @@ func StartServer(baseURL string) (*exec.Cmd, error) {
 
 	port := u.Port()
 	cmd := exec.Command(venvPython(), "-W", "ignore", scriptPath, port)
-	cmd.Stderr, _ = os.OpenFile(os.DevNull, os.O_WRONLY, 0)
+	cmd.Stderr = io.Discard
 	if err := cmd.Start(); err != nil {
 		return nil, fmt.Errorf("argos: start server: %w", err)
 	}
