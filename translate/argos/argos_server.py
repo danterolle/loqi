@@ -12,10 +12,13 @@ API:
 
 import json
 import sys
+import warnings
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
 import argostranslate.package
 import argostranslate.translate
+
+warnings.filterwarnings("ignore")
 
 
 def download_language_pack(from_code, to_code):

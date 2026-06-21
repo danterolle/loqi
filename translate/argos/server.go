@@ -105,7 +105,7 @@ func StartServer(baseURL string) (*exec.Cmd, error) {
 	}
 
 	port := u.Port()
-	cmd := exec.Command(venvPython(), "-W", "ignore::UserWarning", scriptPath, port)
+	cmd := exec.Command(venvPython(), "-W", "ignore", scriptPath, port)
 	cmd.Stderr, _ = os.OpenFile(os.DevNull, os.O_WRONLY, 0)
 	if err := cmd.Start(); err != nil {
 		return nil, fmt.Errorf("argos: start server: %w", err)
