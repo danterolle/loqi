@@ -87,7 +87,7 @@ func translateContent(ctx context.Context, tr *Translator, line, from, to string
 func onlyPlaceholders(s string, n int) bool {
 	var want strings.Builder
 	for i := 0; i < n; i++ {
-		want.WriteString(fmt.Sprintf("0xMD%04x", i))
+		fmt.Fprintf(&want, "0xMD%04x", i)
 	}
 	return s == want.String()
 }
@@ -124,7 +124,7 @@ func protectLinks(s *string) []string {
 					i++ // skip )
 				}
 				tokens = append(tokens, string(runes[start:i]))
-				b.WriteString(fmt.Sprintf("0xMD%04x", len(tokens)-1))
+				fmt.Fprintf(&b, "0xMD%04x", len(tokens)-1)
 				continue
 			}
 		}

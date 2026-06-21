@@ -89,6 +89,9 @@ func (t *jsonTranslator) processItems(ctx context.Context, n int, fn func(i int)
 	wg.Wait()
 }
 
+// processMapNode extracts values into vals, then dispatches them to
+// concurrent workers. json.Unmarshal produces distinct objects per map
+// key, so workers never share underlying map/slice references.
 func (t *jsonTranslator) processMapNode(ctx context.Context, v map[string]any) {
 	keys := make([]string, 0, len(v))
 	vals := make([]any, 0, len(v))

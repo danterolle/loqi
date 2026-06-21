@@ -1,0 +1,22 @@
+version: "2"
+
+run:
+  timeout: 3m
+
+linters:
+  enable:
+    - errcheck
+    - staticcheck
+    - ineffassign
+    - unused
+  settings:
+    errcheck:
+      exclude-functions:
+        - (io.Closer).Close
+        - (io.ReadCloser).Close
+        - (io.WriteCloser).Close
+        - (net/http.ResponseWriter).Write
+        - (*os.File).Close
+        - (net.Conn).Close
+        - (*os.Process).Kill
+        - (*os/exec.Cmd).Wait

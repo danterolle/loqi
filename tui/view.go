@@ -61,7 +61,7 @@ func (m Model) headerView() string {
 		b.WriteString(" ")
 		b.WriteString(inputLabelStyle.Bold(true).Render(srcName))
 	} else {
-		b.WriteString(fmt.Sprintf("From: %s", srcName))
+		fmt.Fprintf(&b, "From: %s", srcName)
 	}
 	b.WriteString("  ->  ")
 	if m.focused == focusTgtLang {
@@ -69,7 +69,7 @@ func (m Model) headerView() string {
 		b.WriteString(" ")
 		b.WriteString(outputLabelStyle.Bold(true).Render(tgtName))
 	} else {
-		b.WriteString(fmt.Sprintf("To: %s", tgtName))
+		fmt.Fprintf(&b, "To: %s", tgtName)
 	}
 	return b.String()
 }
@@ -84,7 +84,7 @@ func (m Model) languageListView() string {
 		idx = m.targetIdx
 	}
 
-	b.WriteString(fmt.Sprintf("  %s language (↑↓ to navigate, Tab to confirm)\n\n", label))
+	fmt.Fprintf(&b, "  %s language (↑↓ to navigate, Tab to confirm)\n\n", label)
 
 	total := len(m.langCodes)
 	start := max(0, min(idx-langListVisible/2, total-langListVisible))
@@ -102,7 +102,7 @@ func (m Model) languageListView() string {
 		}
 		code := m.langCodes[i]
 		name := m.langNames[code]
-		b.WriteString(fmt.Sprintf("%s %s\n", cursor, style(fmt.Sprintf("%-5s %s", code, name))))
+		fmt.Fprintf(&b, "%s %s\n", cursor, style(fmt.Sprintf("%-5s %s", code, name)))
 	}
 	if end < total {
 		b.WriteString("    ...\n")
