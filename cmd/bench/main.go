@@ -26,10 +26,12 @@ func run() int {
 	targets := listTargets()
 
 	model := flag.String("model", config.DefaultModel, "Ollama model")
+	backend := flag.String("backend", "ollama", "Backend type (ollama, llamacpp, argos)")
 	flag.Parse()
 
 	cfg := config.Default()
 	cfg.Backend.Model = *model
+	cfg.Backend.Type = *backend
 
 	setupStart := time.Now()
 	core, cleanup, err := setup.SetupRun(cfg, *model, logDiag, nil)
