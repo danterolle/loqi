@@ -34,6 +34,12 @@ func SetupRun(cfg *config.Config, model string, diag DiagFunc, banner func()) (*
 		}
 		backendType = "llamacpp"
 		unloadOnClose = false
+	case "argos":
+		serverStarter = func() (*exec.Cmd, bool, error) {
+			return SetupArgos(cfg.Backend.BaseURL, diag)
+		}
+		backendType = "argos"
+		unloadOnClose = false
 	default:
 		return nil, nil, fmt.Errorf("unsupported backend type: %q", cfg.Backend.Type)
 	}

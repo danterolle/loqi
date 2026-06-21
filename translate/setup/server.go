@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"net/url"
 	"os/exec"
-	"syscall"
-	"time"
 
+	"github.com/danterolle/loqi/translate/argos"
 	"github.com/danterolle/loqi/translate/llamacpp"
 	"github.com/danterolle/loqi/translate/ollama"
 )
@@ -86,21 +85,24 @@ func SetupLlamaCpp(model, baseURL, modelPath string, serverArgs []string, diag D
 	return cmd, started, nil
 }
 
+func SetupArgos(baseURL string, diag DiagFunc) (cmd *exec.Cmd, started bool, err error) {
+	if argos.Reachable(baseURL) {
+		return nil, false, nil
+	}
+
+	diag("  ◆ Starting argos server...\n")
+	cmd, err = argos.StartServer(baseURL)
+	if err != nil {
+		return nil, false, err
+	}
+	diag("  ◆ Online\n")
+	return cmd, true, nil
+}
+
 func StopProcess(cmd *exec.Cmd) {
 	if cmd == nil || cmd.Process == nil {
 		return
 	}
-	cmd.Process.Signal(syscall.SIGTERM)
-
-	ch := make(chan error, 1)
-	go func() {
-		ch <- cmd.Wait()
-	}()
-
-	select {
-	case <-ch:
-	case <-time.After(3 * time.Second):
-		cmd.Process.Kill()
-		<-ch
-	}
+	cmd.Process.Kill()
+	cmd.Wait()
 }

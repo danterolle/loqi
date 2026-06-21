@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/danterolle/loqi/translate/argos"
 	httpclient "github.com/danterolle/loqi/translate/http"
 	"github.com/danterolle/loqi/translate/llamacpp"
 	"github.com/danterolle/loqi/translate/ollama"
@@ -40,6 +41,8 @@ func NewBackend(cfg *NewBackendConfig) (Backend, error) {
 		return ollama.NewBackend(config), nil
 	case "llamacpp":
 		return llamacpp.NewBackend(config), nil
+	case "argos":
+		return argos.NewBackend(cfg.BaseURL), nil
 	default:
 		return nil, fmt.Errorf("unsupported backend type: %q", cfg.Type)
 	}
