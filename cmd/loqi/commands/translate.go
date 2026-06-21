@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/danterolle/loqi/config"
@@ -62,6 +63,26 @@ func RunTranslate(cfg *config.Config, args []string) error {
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
+
+	isMarkdown := flags.Markdown
+	if !isMarkdown {
+		for _, a := range flags.FlagSet.Args() {
+			if strings.HasSuffix(a, ".md") {
+				isMarkdown = true
+				break
+			}
+		}
+	}
+
+	if isMarkdown {
+		result, err := translate.TranslateMarkdown(ctx, core, text, flags.From, flags.To)
+		if err != nil {
+			return err
+		}
+		fmt.Println(result)
+		return nil
+	}
+
 	if err := runCLI(ctx, core, flags.From, flags.To, text); err != nil {
 		return err
 	}

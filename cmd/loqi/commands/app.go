@@ -62,6 +62,7 @@ func PrintUsage() {
 	fmt.Printf("  --to    string    Target language code (default %q)\n", defaultTo)
 	fmt.Printf("  --model string    Translation model (default %q)\n", cfg.Backend.Model)
 	fmt.Println("  --quiet           Suppress diagnostic output (banner, progress)")
+	fmt.Println("  --markdown        Preserve markdown structure (headings, code fences, lists)")
 	fmt.Println()
 	fmt.Println("━━━ Examples ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 	fmt.Println(`  loqi translate --from it --to en "Ciao mondo!"`)
@@ -89,12 +90,13 @@ func validateLangs(from, to string) error {
 }
 
 type translateFlags struct {
-	Model   string
-	From    string
-	To      string
-	Quiet   bool
-	Help    bool
-	FlagSet *flag.FlagSet
+	Model    string
+	From     string
+	To       string
+	Quiet    bool
+	Markdown bool
+	Help     bool
+	FlagSet  *flag.FlagSet
 }
 
 func parseTranslateFlags(name string, args []string, defaultModel string) (*translateFlags, error) {
@@ -109,6 +111,7 @@ func parseTranslateFlags(name string, args []string, defaultModel string) (*tran
 	fs.StringVar(&flags.From, "from", flags.From, "source language code")
 	fs.StringVar(&flags.To, "to", flags.To, "target language code")
 	fs.BoolVar(&flags.Quiet, "quiet", false, "suppress diagnostic output")
+	fs.BoolVar(&flags.Markdown, "markdown", false, "preserve markdown structure during translation")
 	h := fs.Bool("h", false, "show help")
 	help := fs.Bool("help", false, "show help")
 
