@@ -12,7 +12,7 @@ func ReadInput(args []string) (string, error) {
 		if err == nil {
 			return strings.TrimSpace(string(data)), nil
 		}
-		if os.IsNotExist(err) && isTerminal() {
+		if os.IsNotExist(err) {
 			return strings.TrimSpace(args[0]), nil
 		}
 		return "", err
