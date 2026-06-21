@@ -60,7 +60,13 @@ func SetupRun(cfg *config.Config, model string, diag DiagFunc, banner func()) (*
 		cleanup = func() error { return nil }
 	}
 
-	backend, err := translate.NewBackend(backendType, cfg.Backend.BaseURL, model, cfg.Backend.Options, translate.NewChatPrompt())
+	backend, err := translate.NewBackend(&translate.NewBackendConfig{
+		Type:    backendType,
+		BaseURL: cfg.Backend.BaseURL,
+		Model:   model,
+		Options: cfg.Backend.Options,
+		Prompt:  translate.NewChatPrompt(),
+	})
 	if err != nil {
 		return nil, nil, err
 	}

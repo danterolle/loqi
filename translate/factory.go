@@ -15,25 +15,33 @@ import (
 
 const defaultMaxTokens = 2048
 
-func NewBackend(backendType, baseURL, model string, options map[string]any, prompt *chatPrompt) (Backend, error) {
-	config := httpclient.BackendConfig{
-		BaseURL:     baseURL,
-		Model:       model,
-		Prompt:      prompt,
-		Client:      httpclient.NewHTTPClient(),
-		MaxTokens:   intOption(options, "num_predict", defaultMaxTokens),
-		Temperature: floatOption(options, "temperature", 0.0),
-		TopP:        floatOption(options, "top_p", 1.0),
-	}
-	config.Client.Timeout = durationOption(options, "timeout", 2*time.Minute)
+type NewBackendConfig struct {
+	Type    string
+	BaseURL string
+	Model   string
+	Options map[string]any
+	Prompt  httpclient.PromptBuilder
+}
 
-	switch backendType {
+func NewBackend(cfg *NewBackendConfig) (Backend, error) {
+	config := httpclient.BackendConfig{
+		BaseURL:     cfg.BaseURL,
+		Model:       cfg.Model,
+		Prompt:      cfg.Prompt,
+		Client:      httpclient.NewHTTPClient(),
+		MaxTokens:   intOption(cfg.Options, "num_predict", defaultMaxTokens),
+		Temperature: floatOption(cfg.Options, "temperature", 0.0),
+		TopP:        floatOption(cfg.Options, "top_p", 1.0),
+	}
+	config.Client.Timeout = durationOption(cfg.Options, "timeout", 2*time.Minute)
+
+	switch cfg.Type {
 	case "ollama":
 		return ollama.NewBackend(config), nil
 	case "llamacpp":
 		return llamacpp.NewBackend(config), nil
 	default:
-		return nil, fmt.Errorf("unsupported backend type: %q", backendType)
+		return nil, fmt.Errorf("unsupported backend type: %q", cfg.Type)
 	}
 }
 
