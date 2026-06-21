@@ -1,8 +1,22 @@
 ## What It Is
 
-Loqi is a terminal-based translator that runs locally through LLMs. It supports two backends: **Ollama** (default) and **llama.cpp**. It works in three modes: an interactive TUI built with bubbletea, a `loqi translate` command for one-shot translations, and `loqi batch` for bulk-translating JSON or plain text files.
+Loqi is a terminal-based translator that runs locally. It supports three backends: **Ollama** (default), **llama.cpp**, and **argos-translate**. It works in three modes: an interactive TUI built with bubbletea, a `loqi translate` command for one-shot translations, and `loqi batch` for bulk-translating JSON, plain text or markdown files.
 
-The entire codebase is Go with only five external dependencies: bubbletea, bubbles, lipgloss, yaml, atotto/clipboard.
+The entire codebase is Go with only six external dependencies: bubbletea, bubbles, lipgloss, yaml, atotto/clipboard and mattn/go-runewidth
+
+- [Package Structure](#package-structure)
+- [Backend Selection](#backend-selection)
+- [TUI Mode](#tui-mode)
+- [CLI Mode](#cli-mode)
+- [Batch Mode](#batch-mode)
+- [Language System](#language-system)
+- [Configuration Loading](#configuration-loading)
+- [Ollama Lifecycle Management](#ollama-lifecycle-management)
+- [llama.cpp Lifecycle Management](#llamacpp-lifecycle-management)
+- [Argos Lifecycle Management](#argos-lifecycle-management)
+- [Version Injection](#version-injection)
+- [Test Strategy](#test-strategy)
+- [Known Limitations](#known-limitations)
 
 ## Package Structure
 
@@ -27,7 +41,7 @@ cmd/loqi/main.go
 │   ├─ mock_backend.go
 │   ├─ setup/             ── backend lifecycle orchestration
 │   │   ├─ setup.go       ── SetupRun, unified backend dispatch
-│   │   └─ server.go      ── SetupOllama, SetupLlamaCpp, StopProcess
+│   │   └─ server.go      ── SetupOllama, SetupLlamaCpp, SetupArgos, StopProcess
 │   ├─ argos/              ── argos-translate backend
 │   │   ├─ backend.go      ── HTTP /translate client
 │   │   ├─ server.go       ── venv setup, server start, health check
@@ -59,7 +73,7 @@ Domain code lives in `translate` with its interfaces; `commands` handles CLI dis
 - **Backend type string** — `"ollama"`, `"llamacpp"`, or `"argos"` passed to `translate.NewBackend`
 - **Unload on close** — whether to call `UnloadBackend` during cleanup (ollama only)
 
-Every backend returns a `*translate.Core` wrapping a struct that satisfies `translate.Backend`, plus a `func()` cleanup closure.
+Every backend returns a `*translate.Translator` wrapping a struct that satisfies `translate.Backend`, plus a `func()` cleanup closure.
 
 ```go
 type Backend interface {
@@ -141,12 +155,12 @@ parseTranslateFlags ──► ReadInput (text, file or stdin)
                               │           
                               ├── build backend with config options
                               └── return *Core + cleanup()
-`                             │
+                              │
                               ▼
                      signal.NotifyContext(SIGINT, SIGTERM)
                               │
                               ▼
-                    RunCLI(ctx, core, from, to, text)
+                     runTranslateMarkdownOrCLI(ctx, core, text, flags)
                               │
                               ▼
                      core.Translate ──► backend.Translate
@@ -275,7 +289,7 @@ ollama.ModelExists(model, baseURL) ──► GET /api/tags, parse JSON, match na
 
 The `Reachable` check uses a shared package-level `httpClient` with 2-second timeout. `PullModel` uses a separate `pullClient` with 30-minute timeout because model downloads can be large. Progress rendering is in `progress.go` (separated from lifecycle logic during a refactor).
 
-On cleanup, `UnloadModel` sends `POST /api/generate` with `keep_alive=0` to force Ollama to release the model — this prevents orphan `llama-server` processes from staying resident in memory.
+On cleanup, `UnloadBackend` in `translate/factory.go` sends `POST /api/generate` with `keep_alive=0m` and `unload=true` to force Ollama to release the model from memory.
 
 ## llama.cpp Lifecycle Management
 

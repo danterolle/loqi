@@ -2,7 +2,7 @@
 
 [![Go Version](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go)](https://go.dev)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
-[![Go Report Card](https://goreportcard.com/badge/github.com/danterolle/loqi)](https://goreportcard.com/report/github.com/danterolle/loqi)
+[![Go Report Card](https://img.shields.io/goreportcard/grade/v/github.com/danterolle/loqi?logo=go)](https://goreportcard.com/report/github.com/danterolle/loqi)
 
 A tool for producing local translation drafts via [Ollama](https://ollama.com), [llama.cpp](https://github.com/ggml-org/llama.cpp), or [argos-translate](https://github.com/argosopentech/argos-translate). Translate text, files, docs and structured content entirely on your machine.
 
@@ -24,12 +24,11 @@ Read on if you're interested.
 
 ## Features Summary
 
-- **Local** — runs entirely on your machine, no data sent to third parties
-- **Three backends** — works with [Ollama](https://ollama.com) (auto-start, model auto-pull), [llama.cpp](https://github.com/ggml-org/llama.cpp) (manual or auto-start), or [argos-translate](https://github.com/argosopentech/argos-translate)
-- **Three modes** — interactive TUI, one-shot CLI, and batch (JSON/text)
-- **Configurable** — model, temperature, top_p, num_predict, timeout per backend
-- **Scriptable** — pipe-friendly, CLI flags override config, could fits CI workflows
-- **Model-dependent quality** — output is a draft, not a guaranteed translation. Larger models produce better results. See [benchmarks](#benchmarks).
+- **Local**: runs entirely on your machine, no data sent to third parties
+- **Three backends**: works with [Ollama](https://ollama.com) (auto-start, model auto-pull), [llama.cpp](https://github.com/ggml-org/llama.cpp) (manual or auto-start), or [argos-translate](https://github.com/argosopentech/argos-translate)
+- **Three modes**: interactive TUI, one-shot CLI, and batch (JSON/text/markdown)
+- **Configurable**: model, temperature, top_p, num_predict, timeout per backend
+- **Scriptable**: pipe-friendly, CLI flags override config, could fits CI workflows
 
 ## Table of Contents
 
@@ -234,7 +233,7 @@ Language codes are validated the same way as CLI mode — invalid input produces
 
 ## Benchmarks
 
-See [BENCHMARKS.md](docs/BENCHMARKS.md) for translation speed comparisons across models and 24 languages.
+See [BENCHMARKS.md](docs/BENCHMARKS.md) for speed comparisons across models and a context comparison between argos and Gemma 4.
 
 ## Technical documentation
 
