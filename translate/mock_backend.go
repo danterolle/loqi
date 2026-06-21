@@ -2,6 +2,8 @@ package translate
 
 import "context"
 
+var _ Backend = (*MockBackend)(nil)
+
 type MockBackend struct {
 	TranslateFunc func(ctx context.Context, text, source, target string) (string, error)
 }

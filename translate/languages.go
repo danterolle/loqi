@@ -42,6 +42,8 @@ var langCodes = func() []string {
 	return codes
 }()
 
+var _ LanguageProvider = (*staticLanguages)(nil)
+
 type staticLanguages struct{}
 
 func NewStaticLanguages() *staticLanguages {
