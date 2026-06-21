@@ -50,6 +50,9 @@ func UnloadBackend(backendType, model, baseURL string) {
 			return
 		}
 		resp.Body.Close()
+		if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+			fmt.Fprintf(os.Stderr, "  ⚠ unload: unexpected status: %s\n", resp.Status)
+		}
 	}
 }
 
