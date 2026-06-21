@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -9,22 +10,19 @@ import (
 )
 
 func main() {
-	os.Exit(run())
+	if err := run(); err != nil {
+		fmt.Fprintf(os.Stderr, "  ✖ Error: %v\n", err)
+		os.Exit(1)
+	}
 }
 
-func run() int {
+func run() error {
 	cfgPath, args := extractConfig()
 	cfg, err := config.Load(cfgPath)
 	if err != nil {
-		commands.Fatal(err)
-		return 1
+		return err
 	}
-
-	if err := commands.Run(cfg, args); err != nil {
-		commands.Fatal(err)
-		return 1
-	}
-	return 0
+	return commands.Run(cfg, args)
 }
 
 func extractConfig() (string, []string) {

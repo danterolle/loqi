@@ -3,7 +3,6 @@ package commands
 import (
 	"flag"
 	"fmt"
-	"os"
 	"runtime/debug"
 	"strings"
 
@@ -97,10 +96,6 @@ func PrintUsage() {
 	fmt.Println(`  loqi --config config.yaml translate --from en --to it "Hello"`)
 	fmt.Println()
 	fmt.Println("  # See config.yaml for llama.cpp backend setup (type: llamacpp)")
-}
-
-func Fatal(err error) {
-	fmt.Fprintf(os.Stderr, "  ✖ Error: %v\n", err)
 }
 
 func validateLangs(from, to string) error {
