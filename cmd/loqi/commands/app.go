@@ -15,24 +15,28 @@ const defaultFrom = "auto"
 const defaultTo = "en"
 
 func Run(cfg *config.Config, args []string) error {
-	if len(args) > 1 {
-		switch args[1] {
-		case "translate":
-			return RunTranslate(cfg, args[2:])
-		case "batch":
-			return RunBatch(cfg, args[2:])
-		case "languages":
-			fmt.Println("Supported language codes:")
-			for _, l := range translate.NewStaticLanguages().List() {
-				fmt.Printf("  %-6s %s\n", l.Code, l.Name)
-			}
-			return nil
-		case "-h", "--help":
-			PrintUsage()
-			return nil
-		}
+	if len(args) <= 1 {
+		return RunTUI(cfg, args[1:])
 	}
-	return RunTUI(cfg, args[1:])
+
+	switch args[1] {
+	case "translate":
+		return RunTranslate(cfg, args[2:])
+	case "batch":
+		return RunBatch(cfg, args[2:])
+	case "languages":
+		fmt.Println("Supported language codes:")
+		for _, l := range translate.NewStaticLanguages().List() {
+			fmt.Printf("  %-6s %s\n", l.Code, l.Name)
+		}
+		return nil
+	case "-h", "--help":
+		PrintUsage()
+		return nil
+	default:
+		PrintUsage()
+		return fmt.Errorf("unknown command %q", args[1])
+	}
 }
 
 func PrintUsage() {
