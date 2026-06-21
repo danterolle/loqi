@@ -44,6 +44,6 @@ func printBanner(quiet bool) {
 		}
 		fmt.Fprintln(os.Stderr, "       "+accent.Bold(true).Render(ver))
 	}
-	fmt.Fprintln(os.Stderr, "   "+accent.Render("LOcal Quiet Interpreter"))
+	fmt.Fprintln(os.Stderr, "   "+accent.Render("LOcal and Quiet Interpreter"))
 	fmt.Fprintln(os.Stderr)
 }

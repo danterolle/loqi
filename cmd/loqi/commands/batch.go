@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 
 	"github.com/danterolle/loqi/config"
@@ -13,6 +12,36 @@ import (
 	"github.com/danterolle/loqi/translate/argos"
 	"github.com/danterolle/loqi/translate/setup"
 )
+
+func printBatchHelp(flags *translateFlags) {
+	printBanner(flags.Quiet)
+	fmt.Println("Usage: loqi batch [flags] [file]")
+	fmt.Println()
+	flags.FlagSet.PrintDefaults()
+	fmt.Println()
+	fmt.Println("Examples:")
+	fmt.Println(`  loqi batch --from en --to it < locales/en.json`)
+	fmt.Println(`  loqi batch --from en --to it locales/en.json`)
+	fmt.Println(`  loqi batch --from en --to fr README.md`)
+	fmt.Println(`  echo "Hello world" | loqi batch --from en --to it`)
+}
+
+func runBatchMarkdownOrCLI(ctx context.Context, core *translate.Translator, input []byte, flags *translateFlags) error {
+	if detectMarkdown(flags) {
+		result, err := translate.TranslateMarkdown(ctx, core, string(input), flags.From, flags.To)
+		if err != nil {
+			return err
+		}
+		fmt.Println(result)
+		return nil
+	}
+	output, err := translate.Batch(ctx, core, input, flags.From, flags.To)
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(output))
+	return nil
+}
 
 func RunBatch(cfg *config.Config, args []string) error {
 	flags, err := parseTranslateFlags("batch", args, cfg)
@@ -24,23 +53,8 @@ func RunBatch(cfg *config.Config, args []string) error {
 		cfg.Backend.BaseURL = argos.DefaultBaseURL
 	}
 
-	logDiag := func(format string, args ...any) {
-		if !flags.Quiet {
-			fmt.Fprintf(os.Stderr, format, args...)
-		}
-	}
-
 	if flags.Help {
-		printBanner(flags.Quiet)
-		fmt.Println("Usage: loqi batch [flags] [file]")
-		fmt.Println()
-		flags.FlagSet.PrintDefaults()
-		fmt.Println()
-		fmt.Println("Examples:")
-		fmt.Println(`  loqi batch --from en --to it < locales/en.json`)
-		fmt.Println(`  loqi batch --from en --to it locales/en.json`)
-		fmt.Println(`  loqi batch --from en --to fr README.md`)
-		fmt.Println(`  echo "Hello world" | loqi batch --from en --to it`)
+		printBatchHelp(flags)
 		return nil
 	}
 
@@ -58,43 +72,14 @@ func RunBatch(cfg *config.Config, args []string) error {
 		return fmt.Errorf("no input: specify a file or pipe data to stdin")
 	}
 
-	core, cleanup, err := setup.SetupRun(cfg, flags.Model, logDiag, func() { printBanner(flags.Quiet) })
+	core, cleanup, err := setup.SetupRun(cfg, flags.Model, func(format string, args ...any) { logDiag(flags.Quiet, format, args...) }, func() { printBanner(flags.Quiet) })
 	if err != nil {
 		return err
 	}
-	defer func() {
-		if err := cleanup(); err != nil {
-			fmt.Fprintf(os.Stderr, "  ⚠ cleanup: %v\n", err)
-		}
-	}()
+	defer cleanupRun(cleanup)
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	isMarkdown := flags.Markdown
-	if !isMarkdown {
-		for _, a := range flags.FlagSet.Args() {
-			if strings.HasSuffix(a, ".md") {
-				isMarkdown = true
-				break
-			}
-		}
-	}
-
-	if isMarkdown {
-		result, err := translate.TranslateMarkdown(ctx, core, string(input), flags.From, flags.To)
-		if err != nil {
-			return err
-		}
-		fmt.Println(result)
-		return nil
-	}
-
-	output, err := translate.Batch(ctx, core, input, flags.From, flags.To)
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(string(output))
-	return nil
+	return runBatchMarkdownOrCLI(ctx, core, input, flags)
 }

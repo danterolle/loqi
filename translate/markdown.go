@@ -141,55 +141,80 @@ func restoreLinks(s *string, tokens []string) {
 	}
 }
 
-func splitPrefix(line string) (prefix, body string) {
+func splitWhitespace(line string) (ws, rest string) {
 	idx := 0
 	for idx < len(line) && (line[idx] == ' ' || line[idx] == '\t') {
 		idx++
 	}
-	ws := line[:idx]
-	rest := line[idx:]
+	return line[:idx], line[idx:]
+}
+
+func splitAtxHeading(ws, rest string) (prefix, body string, ok bool) {
+	if rest[0] != '#' {
+		return "", "", false
+	}
+	i := 1
+	for i < len(rest) && rest[i] == '#' {
+		i++
+	}
+	if i < len(rest) && rest[i] == ' ' {
+		return ws + rest[:i+1], rest[i+1:], true
+	}
+	return ws, rest, true
+}
+
+func splitBlockquote(ws, rest string) (prefix, body string, ok bool) {
+	if rest[0] != '>' {
+		return "", "", false
+	}
+	if len(rest) > 1 && rest[1] == ' ' {
+		return ws + "> ", rest[2:], true
+	}
+	return ws + ">", rest[1:], true
+}
+
+func splitUnorderedList(ws, rest string) (prefix, body string, ok bool) {
+	if rest[0] != '-' && rest[0] != '*' && rest[0] != '+' {
+		return "", "", false
+	}
+	if len(rest) > 1 && rest[1] == ' ' {
+		return ws + rest[:2], rest[2:], true
+	}
+	return ws, rest, true
+}
+
+func splitOrderedList(ws, rest string) (prefix, body string, ok bool) {
+	if rest[0] < '0' || rest[0] > '9' {
+		return "", "", false
+	}
+	i := 0
+	for i < len(rest) && rest[i] >= '0' && rest[i] <= '9' {
+		i++
+	}
+	if i < len(rest) && rest[i] == '.' && i+1 < len(rest) && rest[i+1] == ' ' {
+		return ws + rest[:i+2], rest[i+2:], true
+	}
+	return "", "", false
+}
+
+func splitPrefix(line string) (prefix, body string) {
+	ws, rest := splitWhitespace(line)
 
 	if rest == "" {
 		return line, ""
 	}
 
-	// Byte indexing is safe here: all markdown prefixes (#, >, -, *, +, digits) are ASCII.
-	// The rest of this file (protectLinks, restoreLinks) works on []rune for link syntax.
-
-	if rest[0] == '#' {
-		i := 1
-		for i < len(rest) && rest[i] == '#' {
-			i++
-		}
-		if i < len(rest) && rest[i] == ' ' {
-			return ws + rest[:i+1], rest[i+1:]
-		}
-		return ws, rest
+	if p, b, ok := splitAtxHeading(ws, rest); ok {
+		return p, b
 	}
-
-	if rest[0] == '>' {
-		if len(rest) > 1 && rest[1] == ' ' {
-			return ws + "> ", rest[2:]
-		}
-		return ws + ">", rest[1:]
+	if p, b, ok := splitBlockquote(ws, rest); ok {
+		return p, b
 	}
-
-	if rest[0] == '-' || rest[0] == '*' || rest[0] == '+' {
-		if len(rest) > 1 && rest[1] == ' ' {
-			return ws + rest[:2], rest[2:]
-		}
-		return ws, rest
+	if p, b, ok := splitUnorderedList(ws, rest); ok {
+		return p, b
 	}
-
-	if rest[0] >= '0' && rest[0] <= '9' {
-		i := 0
-		for i < len(rest) && rest[i] >= '0' && rest[i] <= '9' {
-			i++
-		}
-		if i < len(rest) && rest[i] == '.' && i+1 < len(rest) && rest[i+1] == ' ' {
-			return ws + rest[:i+2], rest[i+2:]
-		}
+	if p, b, ok := splitOrderedList(ws, rest); ok {
+		return p, b
 	}
-
 	return ws, rest
 }

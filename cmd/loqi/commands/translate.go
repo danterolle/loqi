@@ -14,6 +14,58 @@ import (
 	"github.com/danterolle/loqi/translate/setup"
 )
 
+func logDiag(quiet bool, format string, args ...any) {
+	if !quiet {
+		fmt.Fprintf(os.Stderr, format, args...)
+	}
+}
+
+func cleanupRun(cleanup func() error) {
+	if err := cleanup(); err != nil {
+		fmt.Fprintf(os.Stderr, "  ⚠ cleanup: %v\n", err)
+	}
+}
+
+func printTranslateHelp(flags *translateFlags) {
+	printBanner(flags.Quiet)
+	fmt.Println("Usage: loqi translate [flags] <text|file>")
+	fmt.Println()
+	flags.FlagSet.PrintDefaults()
+	fmt.Println()
+	fmt.Println("Examples:")
+	fmt.Println(`  loqi translate --from it --to en "Ciao mondo!"`)
+	fmt.Println("  loqi translate --from en --to fr < README.md")
+}
+
+func detectMarkdown(flags *translateFlags) bool {
+	if flags.Markdown {
+		return true
+	}
+	for _, a := range flags.FlagSet.Args() {
+		if strings.HasSuffix(a, ".md") {
+			return true
+		}
+	}
+	return false
+}
+
+func runTranslateMarkdownOrCLI(ctx context.Context, core *translate.Translator, text string, flags *translateFlags) error {
+	if detectMarkdown(flags) {
+		result, err := translate.TranslateMarkdown(ctx, core, text, flags.From, flags.To)
+		if err != nil {
+			return err
+		}
+		fmt.Println(result)
+		return nil
+	}
+	result, err := core.Translate(ctx, text, flags.From, flags.To)
+	if err != nil {
+		return err
+	}
+	fmt.Println(result)
+	return nil
+}
+
 func RunTranslate(cfg *config.Config, args []string) error {
 	flags, err := parseTranslateFlags("translate", args, cfg)
 	if err != nil {
@@ -24,21 +76,8 @@ func RunTranslate(cfg *config.Config, args []string) error {
 		cfg.Backend.BaseURL = argos.DefaultBaseURL
 	}
 
-	logDiag := func(format string, args ...any) {
-		if !flags.Quiet {
-			fmt.Fprintf(os.Stderr, format, args...)
-		}
-	}
-
 	if flags.Help {
-		printBanner(flags.Quiet)
-		fmt.Println("Usage: loqi translate [flags] <text|file>")
-		fmt.Println()
-		flags.FlagSet.PrintDefaults()
-		fmt.Println()
-		fmt.Println("Examples:")
-		fmt.Println(`  loqi translate --from it --to en "Ciao mondo!"`)
-		fmt.Println("  loqi translate --from en --to fr < README.md")
+		printTranslateHelp(flags)
 		return nil
 	}
 
@@ -56,49 +95,14 @@ func RunTranslate(cfg *config.Config, args []string) error {
 		return fmt.Errorf("no input text or file provided")
 	}
 
-	core, cleanup, err := setup.SetupRun(cfg, flags.Model, logDiag, func() { printBanner(flags.Quiet) })
+	core, cleanup, err := setup.SetupRun(cfg, flags.Model, func(format string, args ...any) { logDiag(flags.Quiet, format, args...) }, func() { printBanner(flags.Quiet) })
 	if err != nil {
 		return err
 	}
-	defer func() {
-		if err := cleanup(); err != nil {
-			fmt.Fprintf(os.Stderr, "  ⚠ cleanup: %v\n", err)
-		}
-	}()
+	defer cleanupRun(cleanup)
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	isMarkdown := flags.Markdown
-	if !isMarkdown {
-		for _, a := range flags.FlagSet.Args() {
-			if strings.HasSuffix(a, ".md") {
-				isMarkdown = true
-				break
-			}
-		}
-	}
-
-	if isMarkdown {
-		result, err := translate.TranslateMarkdown(ctx, core, text, flags.From, flags.To)
-		if err != nil {
-			return err
-		}
-		fmt.Println(result)
-		return nil
-	}
-
-	if err := runCLI(ctx, core, flags.From, flags.To, text); err != nil {
-		return err
-	}
-	return nil
-}
-
-func runCLI(ctx context.Context, core *translate.Translator, source, target, text string) error {
-	result, err := core.Translate(ctx, text, source, target)
-	if err != nil {
-		return err
-	}
-	fmt.Println(result)
-	return nil
+	return runTranslateMarkdownOrCLI(ctx, core, text, flags)
 }
