@@ -330,3 +330,5 @@ The `commands` package has **no** test coverage.
 - The `wrap()` function in `tui/view.go` splits on spaces — it does not handle CJK text where word boundaries are not marked by whitespace, so Chinese, Japanese and Korean output will not wrap correctly in the TUI output pane.
 - The batch worker pool is hardcoded to 3 goroutines with no configuration knob.
 - There is no caching layer: every translation request, even for identical text, hits the backend API.
+- `isThematicBreak` in `translate/markdown.go` matches any line of only `*`, `-`, `_`, or spaces (≥3 chars). This follows CommonMark but means any sequence of dashes and spaces like `- - -` is treated as a break, not a list. That is correct per spec, but could surprise users writing loose list markup.
+- `splitPrefix` in `translate/markdown.go` indexes by byte, not rune. This is safe because all markdown prefixes (`#`, `>`, `-`, `*`, `+`, digits) are ASCII, but the mix of byte and `[]rune` in the same file is a maintenance trap if non-ASCII prefixes were ever added.

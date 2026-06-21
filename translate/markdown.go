@@ -153,6 +153,9 @@ func splitPrefix(line string) (prefix, body string) {
 		return line, ""
 	}
 
+	// Byte indexing is safe here: all markdown prefixes (#, >, -, *, +, digits) are ASCII.
+	// The rest of this file (protectLinks, restoreLinks) works on []rune for link syntax.
+
 	if rest[0] == '#' {
 		i := 1
 		for i < len(rest) && rest[i] == '#' {
