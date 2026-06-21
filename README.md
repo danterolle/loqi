@@ -4,30 +4,28 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 [![Go Report Card](https://goreportcard.com/badge/github.com/danterolle/loqi)](https://goreportcard.com/report/github.com/danterolle/loqi)
 
-A tool for producing local translation drafts using LLMs via [Ollama](https://ollama.com) or [llama.cpp](https://github.com/ggml-org/llama.cpp). Translate text, files, docs and structured content entirely on your machine.
+A tool for producing local translation drafts via [Ollama](https://ollama.com), [llama.cpp](https://github.com/ggml-org/llama.cpp), or [argos-translate](https://github.com/argosopentech/argos-translate). Translate text, files, docs and structured content entirely on your machine.
 
 **Why Loqi?** 
 
-As convenient as it is, and despite all the opt-out options and privacy policies, I generally believe it’s never ideal to send your data to Google or DeepL (and yes, like everyone else, I do it too). I started this project in an attempt to make myself a bit less dependent on these great technologies.
+As convenient as it is, and despite all the opt-out options and privacy policies, I generally believe it's never ideal to send your data to Google or DeepL (and yes, like everyone else, I do it too). I started this project in an attempt to make myself a bit less dependent on these great technologies.
 
-Can a small-parameter LLM actually help me achieve this? It will never give me absolute certainty (unless a denser model is used, which probably wouldn't suit the purpose of this tool), but a traditional translation engine won't either, even though it would be much faster and more efficient.
-
-The right approach is probably a hybrid of both worlds, and it’s one of the things I’ll be working on in my spare time: using a small, local model (maybe Marian? We will see) as a fast default backend, and falling back to Gemma/Phi/Qwen only for ambiguous sentences or text with low estimated quality.
+Can a small-parameter LLM actually help me achieve this? It will never give me absolute certainty, but a traditional translation engine won't either, even though it would be much faster and more efficient.
 
 This project is an experiment. There are several features that might make it interesting down the road, but at least for now, it meets my needs.
 
-Please note that translation quality depends on the model you choose and small models can really make mistakes so treat the output as a draft to review, *not as a guaranteed result*.
+Please note that translation quality depends on the model you choose and small models can really make mistakes so treat the output as a draft to review, not as a guaranteed result.
 
 Ah, of course you can use or download any model and use it solely for translation, and that would work just fine. This tool is designed specifically and solely to force the model to translate.
 
-And perhaps expanding the model's capabilities to handle data batches and more. 
+And perhaps expanding the model's capabilities to handle data batches and more.
 
 Read on if you're interested.
 
 ## Features Summary
 
 - **Local** — runs entirely on your machine, no data sent to third parties
-- **Dual backend** — works with [Ollama](https://ollama.com) (auto-start, model auto-pull) or [llama.cpp](https://github.com/ggml-org/llama.cpp) (manual or auto-start)
+- **Three backends** — works with [Ollama](https://ollama.com) (auto-start, model auto-pull), [llama.cpp](https://github.com/ggml-org/llama.cpp) (manual or auto-start), or [argos-translate](https://github.com/argosopentech/argos-translate)
 - **Three modes** — interactive TUI, one-shot CLI, and batch (JSON/text)
 - **Configurable** — model, temperature, top_p, num_predict, timeout per backend
 - **Scriptable** — pipe-friendly, CLI flags override config, could fits CI workflows
@@ -50,6 +48,7 @@ Read on if you're interested.
 **Prerequisites (choose one):**
 - [Ollama](https://ollama.com) with a model pulled (e.g. `ollama pull phi4-mini`) — **default backend**
 - [llama.cpp](https://github.com/ggml-org/llama.cpp) `llama-server` serving a GGUF model on `http://localhost:8080`
+- [argos-translate](https://github.com/argosopentech/argos-translate) — Python 3 required, installed automatically on first use
 
 ```bash
 go install github.com/danterolle/loqi@latest
@@ -98,7 +97,7 @@ All fields are optional. CLI flags always override config values:
 loqi --config ./config.yaml translate --from it --to en "Ciao mondo"
 
 # Override model via CLI flag
-loqi --config ./config.yaml translate --model phi4:latest --from it --to en "Ciao mondo"
+loqi --config ./config.yaml translate --model phi4-mini:latest --from it --to en "Ciao mondo"
 ```
 
 ### Backends
@@ -130,6 +129,18 @@ backend:
 ```
 
 When `model_path` is set, loqi starts `llama-server --model <path> --host <host> --port <port> <server_args...>` as a subprocess and kills it on exit.
+
+**Argos**: offline, rule-based translation via [argos-translate](https://github.com/argosopentech/argos-translate). Argos fills the role of a fast, non-LLM translation engine — exactly the kind of lightweight backend the project was looking for (see [Why Loqi?](#why-loqi)). It runs entirely offline with no GPU needed, and for straightforward sentences it is often faster and more deterministic than an LLM-based approach. Auto-installs `argostranslate` in a Python venv and starts a local HTTP server:
+
+```yaml
+backend:
+  type: argos
+  base_url: http://localhost:5000
+```
+
+When `type: argos` is set, loqi creates a Python virtual environment in `~/.cache/loqi/argos-venv`, installs `argostranslate`, and starts the bundled Python server script. Python 3 must be available on the system.
+
+Argos has no auto-detection (`--from auto` is not supported), requires Python 3 on the system, and downloads language packages on first use which adds initial latency. Translation quality and language coverage depend on the argos-translate ecosystem rather than an LLM, so output tends to be more literal and less context-aware.
 
 See [`config/config.yaml`](config/config.yaml) for a full example with defaults.
 
@@ -223,9 +234,7 @@ Language codes are validated the same way as CLI mode — invalid input produces
 
 ## Benchmarks
 
-Translation quality varies significantly by model. Small models (1B-4B) can produce fluent output but may make mistakes on complex sentences, rare languages or domain-specific terms. Always review LLM output before use.
-
-See [BENCHMARKS.md](docs/BENCHMARKS.md) for multi-sentence translation quality and speed benchmarks across 3 models and 24 languages.
+See [BENCHMARKS.md](docs/BENCHMARKS.md) for translation speed comparisons across models and 24 languages.
 
 ## Technical documentation
 
@@ -233,4 +242,4 @@ See [TECHNICAL.md](docs/TECHNICAL.md) for architecture, data flow, package detai
 
 ## License
 
-Apache 2.0 — see [LICENSE](LICENSE).
+Apache 2.0, see [LICENSE](LICENSE).

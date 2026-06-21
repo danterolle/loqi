@@ -8,40 +8,45 @@ The entire codebase is Go with only five external dependencies: bubbletea, bubbl
 
 ```
 cmd/loqi/main.go
-  ├─ cmd/loqi/commands/     ── CLI dispatch, flag parsing, I/O
-  │   ├─ app.go             ── Run, PrintUsage, flag parsing, Fatal
-  │   ├─ translate.go       ── RunTranslate, RunCLI
-  │   ├─ batch.go           ── RunBatch
-  │   ├─ tui.go             ── RunTUI
-  │   ├─ io.go              ── input reading (args, file, stdin)
-  │   └─ banner.go          ── ANSI logo
-  ├─ translate/             ── domain logic
-  │   ├─ interfaces.go      ── Backend, LanguageProvider
-  │   ├─ core.go            ── thin Backend + LanguageProvider wrapper
-  │   ├─ languages.go       ── language map + sorted codes (init-time)
-  │   ├─ default_prompt.go  ── system + user prompt templates
-  │   ├─ factory.go         ── NewBackend, option helpers, UnloadBackend
-  │   ├─ batch.go           ── batch entry point (JSON dispatch)
-  │   ├─ json_translator.go ── recursive JSON walker + worker pool
-  │   ├─ mock_backend.go
-  │   ├─ setup/             ── backend lifecycle orchestration
-  │   │   ├─ setup.go       ── SetupRun, unified backend dispatch
-  │   │   └─ server.go      ── SetupOllama, SetupLlamaCpp, StopProcess
-  │   ├─ http/              ── shared HTTP client
-  │   │   └─ http.go
-  │   ├─ ollama/
-  │   │   ├─ backend.go     ── HTTP /api/chat client
-  │   │   ├─ lifecycle.go   ── health checks, model pull/unload
-  │   │   └─ progress.go    ── ANSI progress bar rendering
-  │   └─ llamacpp/
-  │       ├─ backend.go     ── OpenAI-compatible /v1/chat/completions client
-  │       └─ lifecycle.go   ── server check, model-ready polling
-  ├─ tui/                   ── Bubble Tea app
-  │   ├─ model.go / update.go / view.go
-  │   ├─ commands.go        ── doTranslate, copyClipboard
-  │   ├─ styles.go / ui.go
-  ├─ config/                ── YAML config loader
-  └─ cmd/bench/             ── multi-language benchmark
+├─ cmd/loqi/commands/
+│   ├─ app.go             ── Run, PrintUsage, flag parsing, Fatal
+│   ├─ translate.go       ── RunTranslate, detectMarkdown, runTranslateMarkdownOrCLI, logDiag, cleanupRun, printTranslateHelp
+│   ├─ batch.go           ── RunBatch, runBatchMarkdownOrCLI, printBatchHelp
+│   ├─ tui.go             ── RunTUI
+│   ├─ io.go              ── input reading (args, file, stdin)
+│   └─ banner.go
+├─ translate/
+│   ├─ interfaces.go      ── Backend, LanguageProvider
+│   ├─ core.go            ── thin Backend + LanguageProvider wrapper
+│   ├─ languages.go       ── language map + sorted code
+│   ├─ default_prompt.go  ── system + user prompt templates
+│   ├─ factory.go         ── NewBackend, option helpers, UnloadBackend
+│   ├─ batch.go           ── batch entry point (JSON dispatch)
+│   ├─ json_translator.go ── recursive JSON walker + worker pool
+│   ├─ markdown.go        ── line-by-line markdown translation, prefix splitting
+│   ├─ mock_backend.go
+│   ├─ setup/             ── backend lifecycle orchestration
+│   │   ├─ setup.go       ── SetupRun, unified backend dispatch
+│   │   └─ server.go      ── SetupOllama, SetupLlamaCpp, StopProcess
+│   ├─ argos/              ── argos-translate backend
+│   │   ├─ backend.go      ── HTTP /translate client
+│   │   ├─ server.go       ── venv setup, server start, health check
+│   │   └─ argos_server.py ── embedded Python HTTP server (//go:embed)
+│   ├─ http/              ── shared HTTP client
+│   │   └─ http.go
+│   ├─ ollama/
+│   │   ├─ backend.go     ── HTTP /api/chat client
+│   │   ├─ lifecycle.go   ── health checks, model pull/unload
+│   │   └─ progress.go    ── ANSI progress bar rendering
+│   └─ llamacpp/
+│       ├─ backend.go     ── OpenAI-compatible /v1/chat/completions client
+│       └─ lifecycle.go   ── server check, model-ready polling
+├─ tui/
+│   ├─ model.go/update.go/view.go
+│   ├─ commands.go        ── doTranslate, copyClipboard
+│   ├─ styles.go/ui.go
+├─ config/                ── YAML config loader
+└─ cmd/bench/             ── multi-language benchmark
 ```
 
 Domain code lives in `translate` with its interfaces; `commands` handles CLI dispatch and flag parsing; `translate/setup` owns backend lifecycle and subprocess management; `tui` owns the UI; `config` loads and merges YAML.
@@ -50,8 +55,8 @@ Domain code lives in `translate` with its interfaces; `commands` handles CLI dis
 
 `translate/setup.SetupRun` dispatches based on `cfg.Backend.Type`, parameterising three variables per backend:
 
-- **Server starter** — the function to call (`SetupOllama` or `SetupLlamaCpp` from `setup/server.go`)
-- **Backend type string** — `"ollama"` or `"llamacpp"` passed to `translate.NewBackend`
+- **Server starter** — the function to call (`SetupOllama`, `SetupLlamaCpp`, or `SetupArgos` from `setup/server.go`)
+- **Backend type string** — `"ollama"`, `"llamacpp"`, or `"argos"` passed to `translate.NewBackend`
 - **Unload on close** — whether to call `UnloadBackend` during cleanup (ollama only)
 
 Every backend returns a `*translate.Core` wrapping a struct that satisfies `translate.Backend`, plus a `func()` cleanup closure.
@@ -300,6 +305,36 @@ llamacpp.ServerRunning(baseURL)   ──► GET /v1/models
 
 Unlike Ollama, llama.cpp does not auto-pull models — it requires a local GGUF file. Extra flags (`--ctx-size`, `--ngl`, `--threads`, etc.) can be passed via the `server_args` config field.
 
+## Argos Lifecycle Management
+
+`SetupArgos` in `translate/setup/server.go`:
+
+```
+argos.Reachable(baseURL)      ──► TCP dial :5000 with 2s timeout
+    │
+    ├── reachable ──► skip start
+    │
+    └── not reachable ──► ensureVenv()
+                              │
+                              ├── venv created? ──► skip
+                              │
+                              └── no venv ──► python -m venv ~/.cache/loqi/argos-venv
+                                              pip install argostranslate
+                                                  │
+                                                  ▼
+                                          start embedded argos_server.py <port>
+                                          wait up to 60s (poll every 500ms)
+                                          timeout → kill process, error
+```
+
+The `ensureVenv` function creates a Python virtual environment in `~/.cache/loqi/argos-venv` (or `$TMPDIR/loqi-argos-venv` if home is unavailable). It looks for `python3` first, then falls back to `python` on Unix.
+
+The embedded `argos_server.py` (bundled via `//go:embed`) is a lightweight HTTP server that wraps the `argostranslate` Python package. It accepts POST requests to `/translate` with `{q, source, target}` JSON and returns `{translatedText, error}`.
+
+Argos does not auto-download language packages — `argostranslate` handles this internally on first use of a language pair. Subsequent translations reuse cached models. On cleanup, only the subprocess is killed if Loqi started it; there is no `UnloadBackend` call (no equivalent to Ollama's `keep_alive=0` endpoint).
+
+**Known limitations:** does not support `--from auto` and requires Python 3 on the system. Also, first-run latency includes venv creation and pip install.
+
 ## Version Injection
 
 A single variable `commands.Version` is injected at build time via `-ldflags`.
@@ -330,4 +365,4 @@ The `commands` package has **no** test coverage.
 - The batch worker pool is hardcoded to 3 goroutines with no configuration knob.
 - There is no caching layer: every translation request, even for identical text, hits the backend API.
 - `isThematicBreak` in `translate/markdown.go` matches any line of only `*`, `-`, `_`, or spaces (≥3 chars). This follows CommonMark but means any sequence of dashes and spaces like `- - -` is treated as a break, not a list. That is correct per spec, but could surprise users writing loose list markup.
-- `splitPrefix` in `translate/markdown.go` indexes by byte, not rune. This is safe because all markdown prefixes (`#`, `>`, `-`, `*`, `+`, digits) are ASCII, but the mix of byte and `[]rune` in the same file is a maintenance trap if non-ASCII prefixes were ever added.
+- `splitPrefix` and its helpers (`splitWhitespace`, `splitAtxHeading`, `splitBlockquote`, `splitUnorderedList`, `splitOrderedList`) in `translate/markdown.go` index by byte, not rune. This is safe because all markdown prefixes (`#`, `>`, `-`, `*`, `+`, digits) are ASCII, but the mix of byte and `[]rune` in the same file is a maintenance trap if non-ASCII prefixes were ever added.
