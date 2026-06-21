@@ -18,7 +18,7 @@ type Backend struct {
 func NewBackend(baseURL string) *Backend {
 	return &Backend{
 		BaseURL: baseURL,
-		Client:  &http.Client{Timeout: 30 * time.Second},
+		Client:  &http.Client{Timeout: 2 * time.Minute},
 	}
 }
 
@@ -39,6 +39,9 @@ func (b *Backend) Translate(ctx context.Context, text, source, target string) (s
 	}
 	if source == target {
 		return text, nil
+	}
+	if source == "auto" {
+		return "", fmt.Errorf("argos does not support auto-detection; specify a source language with -from/--from")
 	}
 
 	reqBody := translateRequest{

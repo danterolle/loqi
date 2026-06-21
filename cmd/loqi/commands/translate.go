@@ -10,13 +10,18 @@ import (
 
 	"github.com/danterolle/loqi/config"
 	"github.com/danterolle/loqi/translate"
+	"github.com/danterolle/loqi/translate/argos"
 	"github.com/danterolle/loqi/translate/setup"
 )
 
 func RunTranslate(cfg *config.Config, args []string) error {
-	flags, err := parseTranslateFlags("translate", args, cfg.Backend.Model)
+	flags, err := parseTranslateFlags("translate", args, cfg)
 	if err != nil {
 		return err
+	}
+	cfg.Backend.Type = flags.Backend
+	if flags.Backend == "argos" && cfg.Backend.BaseURL == config.DefaultBaseURL {
+		cfg.Backend.BaseURL = argos.DefaultBaseURL
 	}
 
 	logDiag := func(format string, args ...any) {

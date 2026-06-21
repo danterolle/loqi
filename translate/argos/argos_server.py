@@ -14,7 +14,26 @@ import json
 import sys
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
+import argostranslate.package
 import argostranslate.translate
+
+
+def download_language_pack(from_code, to_code):
+    """Download and install language package if missing."""
+    trans = argostranslate.translate.get_translation_from_codes(from_code, to_code)
+    if trans is not None:
+        return trans
+
+    argostranslate.package.update_package_index()
+    for pkg in argostranslate.package.get_available_packages():
+        if pkg.from_code == from_code and pkg.to_code == to_code:
+            print(f"[argos] downloading {from_code}→{to_code} package...", file=sys.stderr)
+            sys.stderr.flush()
+            install_path = pkg.download()
+            argostranslate.package.install_from_path(install_path)
+            return argostranslate.translate.get_translation_from_codes(from_code, to_code)
+
+    return None
 
 
 class TranslateHandler(BaseHTTPRequestHandler):
@@ -27,7 +46,12 @@ class TranslateHandler(BaseHTTPRequestHandler):
             source = req.get("source", "en")
             target = req.get("target", "it")
 
-            result = argostranslate.translate.translate(text, source, target)
+            trans = download_language_pack(source, target)
+            if trans is None:
+                raise ValueError(
+                    f"No language package available for {source}→{target}"
+                )
+            result = trans.translate(text)
 
             resp = json.dumps({"translatedText": result}).encode()
             self.send_response(200)

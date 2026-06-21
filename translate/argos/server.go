@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+const DefaultBaseURL = "http://localhost:5000"
+
 //go:embed argos_server.py
 var serverScript string
 
@@ -103,8 +105,8 @@ func StartServer(baseURL string) (*exec.Cmd, error) {
 	}
 
 	port := u.Port()
-	cmd := exec.Command(venvPython(), scriptPath, port)
-	cmd.Stderr = os.Stderr
+	cmd := exec.Command(venvPython(), "-W", "ignore::UserWarning", scriptPath, port)
+	cmd.Stderr, _ = os.OpenFile(os.DevNull, os.O_WRONLY, 0)
 	if err := cmd.Start(); err != nil {
 		return nil, fmt.Errorf("argos: start server: %w", err)
 	}

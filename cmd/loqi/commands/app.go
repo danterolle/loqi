@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/danterolle/loqi/config"
 	"github.com/danterolle/loqi/translate"
@@ -15,7 +16,11 @@ const defaultFrom = "auto"
 const defaultTo = "en"
 
 func Run(cfg *config.Config, args []string) error {
-	if len(args) <= 1 {
+	if len(args) <= 1 || (len(args) > 1 && strings.HasPrefix(args[1], "-")) {
+		if len(args) > 1 && (args[1] == "-h" || args[1] == "--help") {
+			PrintUsage()
+			return nil
+		}
 		return RunTUI(cfg, args[1:])
 	}
 
@@ -54,18 +59,22 @@ func PrintUsage() {
 	fmt.Println("  --config <path>    Path to config file")
 	fmt.Println()
 	fmt.Println("━━━ Backends ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-	fmt.Println("  Supports Ollama (default) and llama.cpp.")
-	fmt.Println("  Set backend.type in config: ollama | llamacpp")
+	fmt.Println("  ollama   (default)  — general-purpose LLM")
+	fmt.Println("  llamacpp            — GGUF models via llama.cpp")
+	fmt.Println("  argos               — argos-translate (pip install argostranslate)")
+	fmt.Println("  Set backend.type in config or use --backend")
 	fmt.Println()
 	fmt.Println("━━━ Translate / Batch flags ━━━━━━━━━━━━━━━━━━━━━")
-	fmt.Printf("  --from  string    Source language code (default %q)\n", defaultFrom)
-	fmt.Printf("  --to    string    Target language code (default %q)\n", defaultTo)
-	fmt.Printf("  --model string    Translation model (default %q)\n", cfg.Backend.Model)
+	fmt.Printf("  --backend string  Backend type (default %q)\n", cfg.Backend.Type)
+	fmt.Printf("  --from    string  Source language code (default %q)\n", defaultFrom)
+	fmt.Printf("  --to      string  Target language code (default %q)\n", defaultTo)
+	fmt.Printf("  --model   string  Translation model (default %q)\n", cfg.Backend.Model)
 	fmt.Println("  --quiet           Suppress diagnostic output (banner, progress)")
 	fmt.Println("  --markdown        Preserve markdown structure (headings, code fences, lists)")
 	fmt.Println()
 	fmt.Println("━━━ Examples ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 	fmt.Println(`  loqi translate --from it --to en "Ciao mondo!"`)
+	fmt.Println(`  loqi translate --backend argos "hello world"`)
 	fmt.Println("  loqi batch --from en --to it < locales/en.json")
 	fmt.Println(`  loqi --config config.yaml translate --from en --to it "Hello"`)
 	fmt.Println()
@@ -90,6 +99,7 @@ func validateLangs(from, to string) error {
 }
 
 type translateFlags struct {
+	Backend  string
 	Model    string
 	From     string
 	To       string
@@ -99,14 +109,16 @@ type translateFlags struct {
 	FlagSet  *flag.FlagSet
 }
 
-func parseTranslateFlags(name string, args []string, defaultModel string) (*translateFlags, error) {
+func parseTranslateFlags(name string, args []string, cfg *config.Config) (*translateFlags, error) {
 	flags := &translateFlags{
-		Model: defaultModel,
-		From:  defaultFrom,
-		To:    defaultTo,
+		Backend: cfg.Backend.Type,
+		Model:   cfg.Backend.Model,
+		From:    defaultFrom,
+		To:      defaultTo,
 	}
 
 	fs := flag.NewFlagSet(name, flag.ContinueOnError)
+	fs.StringVar(&flags.Backend, "backend", flags.Backend, "backend type (ollama, llamacpp, argos)")
 	fs.StringVar(&flags.Model, "model", flags.Model, "translation model")
 	fs.StringVar(&flags.From, "from", flags.From, "source language code")
 	fs.StringVar(&flags.To, "to", flags.To, "target language code")
