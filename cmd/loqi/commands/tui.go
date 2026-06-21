@@ -3,6 +3,8 @@ package commands
 import (
 	"context"
 	"flag"
+	"fmt"
+	"os"
 	"os/signal"
 	"syscall"
 
@@ -23,7 +25,11 @@ func RunTUI(cfg *config.Config, args []string) error {
 	if err != nil {
 		return err
 	}
-	defer cleanup()
+	defer func() {
+		if err := cleanup(); err != nil {
+			fmt.Fprintf(os.Stderr, "  ⚠ cleanup: %v\n", err)
+		}
+	}()
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()

@@ -38,7 +38,11 @@ func run() int {
 		return 1
 	}
 	setupElapsed := time.Since(setupStart)
-	defer cleanup()
+	defer func() {
+		if err := cleanup(); err != nil {
+			fmt.Fprintf(os.Stderr, "  ⚠ cleanup: %v\n", err)
+		}
+	}()
 
 	totalStart := time.Now()
 	totalSentences := len(sentences)

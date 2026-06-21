@@ -10,7 +10,7 @@ import (
 
 type DiagFunc func(format string, args ...any)
 
-func SetupRun(cfg *config.Config, model string, diag DiagFunc, banner func()) (*translate.Translator, func(), error) {
+func SetupRun(cfg *config.Config, model string, diag DiagFunc, banner func()) (*translate.Translator, func() error, error) {
 	if banner != nil {
 		banner()
 	}
@@ -43,19 +43,21 @@ func SetupRun(cfg *config.Config, model string, diag DiagFunc, banner func()) (*
 		return nil, nil, err
 	}
 
-	var cleanup func()
+	var cleanup func() error
 	if started && serverCmd != nil {
 		c := serverCmd
-		cleanup = func() {
+		cleanup = func() error {
+			var err error
 			if unloadOnClose {
-				translate.UnloadBackend(backendType, model, cfg.Backend.BaseURL)
+				err = translate.UnloadBackend(backendType, model, cfg.Backend.BaseURL)
 			}
 			StopProcess(c)
+			return err
 		}
 	} else if unloadOnClose {
-		cleanup = func() { translate.UnloadBackend(backendType, model, cfg.Backend.BaseURL) }
+		cleanup = func() error { return translate.UnloadBackend(backendType, model, cfg.Backend.BaseURL) }
 	} else {
-		cleanup = func() {}
+		cleanup = func() error { return nil }
 	}
 
 	backend, err := translate.NewBackend(backendType, cfg.Backend.BaseURL, model, cfg.Backend.Options, translate.NewChatPrompt())

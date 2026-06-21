@@ -37,26 +37,26 @@ func NewBackend(backendType, baseURL, model string, options map[string]any, prom
 	}
 }
 
-func UnloadBackend(backendType, model, baseURL string) {
-	if backendType == "ollama" {
-		body := map[string]string{"model": model, "keep_alive": "0m", "unload": "true"}
-		data, err := json.Marshal(body)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "  ⚠ unload: encode: %v\n", err)
-			return
-		}
-		client := httpclient.NewHTTPClient()
-		client.Timeout = 30 * time.Second
-		resp, err := client.Post(baseURL+"/api/generate", "application/json", bytes.NewReader(data))
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "  ⚠ unload: %v\n", err)
-			return
-		}
-		resp.Body.Close()
-		if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-			fmt.Fprintf(os.Stderr, "  ⚠ unload: unexpected status: %s\n", resp.Status)
-		}
+func UnloadBackend(backendType, model, baseURL string) error {
+	if backendType != "ollama" {
+		return nil
 	}
+	body := map[string]string{"model": model, "keep_alive": "0m", "unload": "true"}
+	data, err := json.Marshal(body)
+	if err != nil {
+		return fmt.Errorf("unload: encode: %w", err)
+	}
+	client := httpclient.NewHTTPClient()
+	client.Timeout = 30 * time.Second
+	resp, err := client.Post(baseURL+"/api/generate", "application/json", bytes.NewReader(data))
+	if err != nil {
+		return fmt.Errorf("unload: %w", err)
+	}
+	resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return fmt.Errorf("unload: unexpected status: %s", resp.Status)
+	}
+	return nil
 }
 
 func optionAsFloat64(options map[string]any, key string) (float64, bool) {
