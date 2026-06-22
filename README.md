@@ -1,31 +1,29 @@
 # Loqi
 
 [![Go Version](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go)](https://go.dev)
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 [![CI](https://github.com/danterolle/loqi/actions/workflows/ci.yml/badge.svg)](https://github.com/danterolle/loqi/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 
-A tool for producing local translation drafts via [Ollama](https://ollama.com), [llama.cpp](https://github.com/ggml-org/llama.cpp), or [argos-translate](https://github.com/argosopentech/argos-translate). Translate text, files, docs and structured content entirely on your machine.
+A tool for producing local translation drafts via [Ollama](https://ollama.com), [llama.cpp](https://github.com/ggml-org/llama.cpp) or [argos-translate](https://github.com/argosopentech/argos-translate). Translate text, files, docs and structured content entirely on your machine.
+
+<img src="loqi.png" alt="Loqi TUI" width="600">
 
 **Why Loqi?** 
 
 As convenient as it is, and despite all the opt-out options and privacy policies, I generally believe it's never ideal to send your data to Google or DeepL (and yes, like everyone else, I do it too). I started this project in an attempt to make myself a bit less dependent on these great technologies.
 
-Can a small-parameter LLM actually help me achieve this? It will never give me absolute certainty, but a traditional translation engine won't either, even though it would be much faster and more efficient.
+Can a small-parameter LLM actually help me achieve this? It will never give me absolute certainty, but a traditional translation engine won't either, even though it would be much faster and more efficient. This project is an experiment. Open-weights LLMs may be slow (since their performance depends proportionally on the hardware being used), but they can help understand the context, which could prove useful.
 
-This project is an experiment. There are several features that might make it interesting down the road, but at least for now, it meets my needs.
+Therefore, keep in mind that the quality of the translation depends on the model you choose, and that smaller models may make mistakes. So treat the result as a draft to be reviewed, not as a guaranteed result.
 
-Please note that translation quality depends on the model you choose and small models can really make mistakes so treat the output as a draft to review, not as a guaranteed result.
-
-Ah, of course you can use or download any model and use it solely for translation, and that would work just fine. This tool is designed specifically and solely to force the model to translate.
-
-And perhaps expanding the model's capabilities to handle data batches and more.
+Of course you can use or download any model and use it solely for translation, and that would work just fine. This tool is designed specifically and solely to force the model to translate. And perhaps expanding the model's capabilities to handle data batches and more.
 
 Read on if you're interested.
 
 ## Features Summary
 
 - **Local**: runs entirely on your machine, no data sent to third parties
-- **Three backends**: works with [Ollama](https://ollama.com) (auto-start, model auto-pull), [llama.cpp](https://github.com/ggml-org/llama.cpp) (manual or auto-start), or [argos-translate](https://github.com/argosopentech/argos-translate)
+- **Three backends**: works with [Ollama](https://ollama.com) (auto-start, model auto-pull), [llama.cpp](https://github.com/ggml-org/llama.cpp) (manual or auto-start) or [argos-translate](https://github.com/argosopentech/argos-translate)
 - **Three modes**: interactive TUI, one-shot CLI, and batch (JSON/text/markdown)
 - **Configurable**: model, temperature, top_p, num_predict, timeout per backend
 - **Scriptable**: pipe-friendly, CLI flags override config, could fits CI workflows
