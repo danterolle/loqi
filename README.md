@@ -3,7 +3,6 @@
 [![Go Version](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go)](https://go.dev)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 [![CI](https://github.com/danterolle/loqi/actions/workflows/ci.yml/badge.svg)](https://github.com/danterolle/loqi/actions/workflows/ci.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/danterolle/loqi)](https://goreportcard.com/report/github.com/danterolle/loqi)
 
 A tool for producing local translation drafts via [Ollama](https://ollama.com), [llama.cpp](https://github.com/ggml-org/llama.cpp), or [argos-translate](https://github.com/argosopentech/argos-translate). Translate text, files, docs and structured content entirely on your machine.
 
